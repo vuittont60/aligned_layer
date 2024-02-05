@@ -44,7 +44,7 @@ interface IIncredibleSquaringTaskManager {
         // Can be obtained by the operator from the event NewTaskCreated.
         uint32 referenceTaskIndex;
         // This is just the response that the operator has to compute by itself.
-        uint256 numberSquared;
+        bool ProofIsCorrect;
     }
 
     // Extra information related to taskResponse, which is filled inside the contract.

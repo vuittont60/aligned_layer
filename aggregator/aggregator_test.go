@@ -2,7 +2,9 @@ package aggregator
 
 import (
 	"context"
+	"fmt"
 	"math/big"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -72,7 +74,13 @@ func TestSendNewTask(t *testing.T) {
 	// see https://hynek.me/articles/what-to-mock-in-5-mins/
 	mockBlsAggService.EXPECT().InitializeNewTask(TASK_INDEX, BLOCK_NUMBER, types.QUORUM_NUMBERS, []uint32{types.QUORUM_THRESHOLD_NUMERATOR}, taskTimeToExpiry)
 
-	err = aggregator.sendNewTask(NUMBER_TO_SQUARE_BIG_INT)
+	// We are randomizing bytes for proofs, all should fail
+	r := rand.New(rand.NewSource(1))
+	fmt.Println(time.Now().UnixNano())
+	badProof := make([]byte, 32)
+	r.Read(badProof)
+
+	err = aggregator.sendNewTask(badProof)
 	assert.Nil(t, err)
 }
 
