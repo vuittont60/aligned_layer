@@ -2,6 +2,8 @@ package aggregator
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -160,7 +162,13 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	// ticker doesn't tick immediately, so we send the first task here
 	// see https://github.com/golang/go/issues/17601
 
-	bad_proof := []byte{0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef}
+	// We are randomizing bytes for proofs, all should fail
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	fmt.Println(time.Now().UnixNano())
+	bad_proof := make([]byte, 32)
+	r.Read(bad_proof)
+
+	// bad_proof := []byte{0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef}
 
 	_ = agg.sendNewTask(bad_proof)
 	taskNum++
@@ -173,6 +181,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
+			r.Read(bad_proof)
 			err := agg.sendNewTask(bad_proof)
 			taskNum++
 			if err != nil {
