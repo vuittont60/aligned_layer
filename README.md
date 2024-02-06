@@ -42,7 +42,7 @@ make cli-setup-operator
 make start-operator
 ```
 
-# Workflow
+## Workflow
 
 To re compile contracts in case of changes use:
 
@@ -56,6 +56,6 @@ To re generate the bindings in go:
 make bindings
 ```
 
-# Acknowledgment
+## Acknowledgment
 
 Layr-Labs for creating [Incredible Squaring AVS](https://github.com/Layr-Labs/incredible-squaring-avs), which was used to bootstrap the initial version of Aligned Layer
