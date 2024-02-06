@@ -10,7 +10,6 @@ package mocks
 
 import (
 	context "context"
-	big "math/big"
 	reflect "reflect"
 
 	contractBLSPubkeyRegistry "github.com/Layr-Labs/eigensdk-go/contracts/bindings/BLSPubkeyRegistry"
@@ -105,7 +104,7 @@ func (mr *MockAvsWritererMockRecorder) SendAggregatedResponse(arg0, arg1, arg2, 
 }
 
 // SendNewTaskVerifyProof mocks base method.
-func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 *big.Int, arg2 uint32, arg3 []byte) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
+func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 []byte, arg2 uint32, arg3 []byte) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendNewTaskVerifyProof", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask)
