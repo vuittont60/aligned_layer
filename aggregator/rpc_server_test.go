@@ -2,8 +2,10 @@ package aggregator
 
 import (
 	"context"
-	"math/big"
+	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
@@ -62,10 +64,16 @@ func TestProcessSignedTaskResponse(t *testing.T) {
 
 // mocks an operator signing on a task response
 func createMockSignedTaskResponse(mockTask MockTask, keypair bls.KeyPair) (*SignedTaskResponse, error) {
-	numberToSquareBigInt := big.NewInt(int64(mockTask.NumberToSquare))
+
+	// We are randomizing bytes for proofs, all should fail
+	r := rand.New(rand.NewSource(1))
+	fmt.Println(time.Now().UnixNano())
+	badProof := make([]byte, 32)
+	r.Read(badProof)
+
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: mockTask.TaskNum,
-		NumberSquared:      numberToSquareBigInt.Mul(numberToSquareBigInt, numberToSquareBigInt),
+		ProofIsCorrect:     false,
 	}
 	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
 	if err != nil {

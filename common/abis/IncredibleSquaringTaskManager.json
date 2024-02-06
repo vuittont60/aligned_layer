@@ -184,8 +184,8 @@
           },
           {
             "internalType": "uint256",
-            "name": "numberSquared",
-            "type": "uint256"
+            "name": "ProofIsCorrect",
+            "type": "bool"
           }
         ],
         "indexed": true,
@@ -840,8 +840,8 @@
           },
           {
             "internalType": "uint256",
-            "name": "numberSquared",
-            "type": "uint256"
+            "name": "ProofIsCorrect",
+            "type": "bool"
           }
         ],
         "internalType": "struct IIncredibleSquaringTaskManager.TaskResponse",
@@ -946,8 +946,8 @@
           },
           {
             "internalType": "uint256",
-            "name": "numberSquared",
-            "type": "uint256"
+            "name": "ProofIsCorrect",
+            "type": "bool"
           }
         ],
         "internalType": "struct IIncredibleSquaringTaskManager.TaskResponse",

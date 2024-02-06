@@ -2,7 +2,9 @@ package aggregator
 
 import (
 	"context"
+	"fmt"
 	"math/big"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -58,12 +60,15 @@ func TestSendNewTask(t *testing.T) {
 
 	var TASK_INDEX = uint32(0)
 	var BLOCK_NUMBER = uint32(100)
-	var NUMBER_TO_SQUARE = uint32(3)
-	var NUMBER_TO_SQUARE_BIG_INT = big.NewInt(int64(NUMBER_TO_SQUARE))
 
-	mockAvsWriterer.EXPECT().SendNewTaskNumberToSquare(
-		context.Background(), NUMBER_TO_SQUARE_BIG_INT, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
-	).Return(mocks.MockSendNewTaskNumberToSquareCall(BLOCK_NUMBER, TASK_INDEX, NUMBER_TO_SQUARE))
+	r := rand.New(rand.NewSource(1))
+	fmt.Println(time.Now().UnixNano())
+	badProof := make([]byte, 32)
+	r.Read(badProof)
+
+	mockAvsWriterer.EXPECT().SendNewTaskVerifyProof(
+		context.Background(), badProof, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
+	).Return(mocks.MockSendNewTaskVerifyProofCall(BLOCK_NUMBER, TASK_INDEX, badProof))
 
 	// 100 blocks, each takes 12 seconds. We hardcode for now since aggregator also hardcodes this value
 	taskTimeToExpiry := 100 * 12 * time.Second
@@ -72,7 +77,7 @@ func TestSendNewTask(t *testing.T) {
 	// see https://hynek.me/articles/what-to-mock-in-5-mins/
 	mockBlsAggService.EXPECT().InitializeNewTask(TASK_INDEX, BLOCK_NUMBER, types.QUORUM_NUMBERS, []uint32{types.QUORUM_THRESHOLD_NUMERATOR}, taskTimeToExpiry)
 
-	err = aggregator.sendNewTask(NUMBER_TO_SQUARE_BIG_INT)
+	err = aggregator.sendNewTask(badProof)
 	assert.Nil(t, err)
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -27,34 +28,49 @@ func TestOperator(t *testing.T) {
 	const taskIndex = 1
 
 	t.Run("ProcessNewTaskCreatedLog", func(t *testing.T) {
-		var numberToBeSquared = big.NewInt(3)
+
+		// We are randomizing bytes for proofs, all should fail
+		r := rand.New(rand.NewSource(1))
+		fmt.Println(time.Now().UnixNano())
+		bad_proof := make([]byte, 32)
+		r.Read(bad_proof)
+
 		newTaskCreatedLog := &cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated{
 			TaskIndex: taskIndex,
 			Task: cstaskmanager.IIncredibleSquaringTaskManagerTask{
-				NumberToBeSquared:         numberToBeSquared,
-				TaskCreatedBlock:          1000,
+				Proof:                     bad_proof,
 				QuorumNumbers:             aggtypes.QUORUM_NUMBERS,
 				QuorumThresholdPercentage: aggtypes.QUORUM_THRESHOLD_NUMERATOR,
 			},
 			Raw: types.Log{},
 		}
 		got := operator.ProcessNewTaskCreatedLog(newTaskCreatedLog)
-		numberSquared := big.NewInt(0).Mul(numberToBeSquared, numberToBeSquared)
+
+		// This should call the verifier
+		result := false
 		want := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 			ReferenceTaskIndex: taskIndex,
-			NumberSquared:      numberSquared,
+			ProofIsCorrect:     result,
 		}
 		assert.Equal(t, got, want)
 	})
 
 	t.Run("Start", func(t *testing.T) {
-		var numberToBeSquared = big.NewInt(3)
+
+		// This should be chosen with some logic
+		verificationResult := false
+
+		// We are randomizing bytes for proofs, all should fail
+		r := rand.New(rand.NewSource(1))
+		fmt.Println(time.Now().UnixNano())
+		badProof := make([]byte, 32)
+		r.Read(badProof)
 
 		// new task event
 		newTaskCreatedEvent := &cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated{
 			TaskIndex: taskIndex,
 			Task: cstaskmanager.IIncredibleSquaringTaskManagerTask{
-				NumberToBeSquared:         numberToBeSquared,
+				Proof:                     badProof,
 				TaskCreatedBlock:          1000,
 				QuorumNumbers:             aggtypes.QUORUM_NUMBERS,
 				QuorumThresholdPercentage: aggtypes.QUORUM_THRESHOLD_NUMERATOR,
@@ -70,7 +86,7 @@ func TestOperator(t *testing.T) {
 		signedTaskResponse := &aggregator.SignedTaskResponse{
 			TaskResponse: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 				ReferenceTaskIndex: taskIndex,
-				NumberSquared:      big.NewInt(0).Mul(numberToBeSquared, numberToBeSquared),
+				ProofIsCorrect:     verificationResult,
 			},
 			BlsSignature: bls.Signature{
 				G1Point: bls.NewG1Point(X, Y),
