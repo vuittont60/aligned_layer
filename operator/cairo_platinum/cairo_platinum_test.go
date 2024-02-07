@@ -1,6 +1,7 @@
 package cairo_platinum_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -8,7 +9,8 @@ import (
 )
 
 func TestFibonacci5ProofVerifies(t *testing.T) {
-	f, err := os.Open("fibo_5.proof")
+	fmt.Println(os.Getwd())
+	f, err := os.Open("../../tests/testing_data/fibo_5.proof")
 	if err != nil {
 		t.Errorf("could not open proof file")
 	}
