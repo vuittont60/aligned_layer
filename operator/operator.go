@@ -14,6 +14,7 @@ import (
 	"github.com/Layr-Labs/incredible-squaring-avs/core"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
+	"github.com/Layr-Labs/incredible-squaring-avs/operator/cairo_platinum"
 	"github.com/Layr-Labs/incredible-squaring-avs/types"
 
 	sdkavsregistry "github.com/Layr-Labs/eigensdk-go/chainio/avsregistry"
@@ -334,7 +335,13 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 
-	VerificationResult := false
+	// Since the Cairo verifier expects the proof to be written in a buffer of length MAX_PROOF_SIZE,
+	// we copy the contents of the proof sent in the task to a buffer of that size.
+	proofLen := (uint)(len(newTaskCreatedLog.Task.Proof))
+	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+	copy(proofBuffer, newTaskCreatedLog.Task.Proof)
+
+	VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), proofLen)
 
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,

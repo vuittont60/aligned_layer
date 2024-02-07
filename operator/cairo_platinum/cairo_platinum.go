@@ -1,11 +1,13 @@
 package cairo_platinum
 
 /*
-#cgo LDFLAGS: ./lib/libcairo_platinum.a
+#cgo LDFLAGS: operator/cairo_platinum/lib/libcairo_platinum.a
 #include "./lib/cairo_platinum.h"
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 const MAX_PROOF_SIZE = 1024 * 1024
 
