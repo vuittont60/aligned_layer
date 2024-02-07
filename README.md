@@ -1,6 +1,7 @@
 # Aligned Layer
 
-<b> To be used in testnet only. </b>
+> [!CAUTION]
+> To be used in testnet only.
 
 Basic repo demoing a Stark/Snark verifier AVS middleware with full eigenlayer integration. 
 
