@@ -106,3 +106,9 @@ tests-contract: ## runs all forge tests
 tests-integration: ## runs all integration tests
 	go test ./tests/integration/... -v -count=1
 
+__LAMBDAWORKS_FFI__: ## 
+build-lambdaworks:
+	@cd operator/cairo_platinum/lib && cargo build --release
+	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
+
+
