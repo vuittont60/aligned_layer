@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/consensys/gnark/backend/plonk"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prometheus/client_golang/prometheus"
@@ -335,6 +336,8 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	)
 
 	VerificationResult := false
+
+	plonk.Verify()
 
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
