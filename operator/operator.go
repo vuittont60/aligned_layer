@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/consensys/gnark-crypto/ecc"
 	"github.com/consensys/gnark/backend/plonk"
+	"github.com/consensys/gnark/backend/witness"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prometheus/client_golang/prometheus"
@@ -335,9 +337,52 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 
-	VerificationResult := false
+	proofFile, err := os.Open("operator/plonk_data/plonk_cubic_circuit.proof")
+	if err != nil {
+		panic("Could not open proof file")
+	}
+	vkFile, err := os.Open("operator/plonk_data/plonk_verification_key")
+	if err != nil {
+		panic("Could not open verification key file")
+	}
+	witnessFile, err := os.Open("operator/plonk_data/witness.pub")
+	if err != nil {
+		panic("Could not open witness file")
+	}
+	defer proofFile.Close()
+	defer vkFile.Close()
+	defer witnessFile.Close()
 
-	plonk.Verify()
+	proof := plonk.NewProof(ecc.BLS12_381)
+	_, err = proof.ReadFrom(proofFile)
+	if err != nil {
+		panic("Could not read proof from file")
+	}
+
+	publicWitness, err := witness.New(ecc.BLS12_381.ScalarField())
+	if err != nil {
+		panic("Error instantiating witness")
+	}
+	_, err = publicWitness.ReadFrom(witnessFile)
+	if err != nil {
+		panic("Could not read witness from file")
+	}
+
+	vk := plonk.NewVerifyingKey(ecc.BLS12_381)
+	_, err = vk.ReadFrom(vkFile)
+	if err != nil {
+		panic("Could not read verifying key from file")
+	}
+
+	err = plonk.Verify(proof, vk, publicWitness)
+	var VerificationResult bool
+	if err != nil {
+		VerificationResult = false
+	} else {
+		VerificationResult = true
+	}
+
+	o.logger.Infof("Verification result: %t", VerificationResult)
 
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
