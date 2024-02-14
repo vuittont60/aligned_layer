@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -330,8 +331,12 @@ func (o *Operator) Start(ctx context.Context) error {
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
 func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
-	o.logger.Info("Received new task",
-		"proofToBeVerified", newTaskCreatedLog.Task.Proof,
+
+	proofLen := (uint)(len(newTaskCreatedLog.Task.Proof))
+	o.logger.Info("Received new task with proof to verify",
+		"proofLen: ", proofLen,
+		"proofFirstBytes", "0x"+hex.EncodeToString(newTaskCreatedLog.Task.Proof[0:8]),
+		"proofLastBytes", "0x"+hex.EncodeToString(newTaskCreatedLog.Task.Proof[proofLen-8:proofLen]),
 		"taskIndex", newTaskCreatedLog.TaskIndex,
 		"taskCreatedBlock", newTaskCreatedLog.Task.TaskCreatedBlock,
 		"quorumNumbers", newTaskCreatedLog.Task.QuorumNumbers,
@@ -340,8 +345,10 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 
 	// For demonstration purposes, when the task index is even, a valid Cairo proof is read and verified.
 	if newTaskCreatedLog.TaskIndex%2 == 0 {
+		proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+		copy(proofBuffer, newTaskCreatedLog.Task.Proof)
 
-		VerificationResult := o.VerifyCairoProof()
+		VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
 
 		o.logger.Infof("CAIRO proof verification result: %t", VerificationResult)
 		taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
@@ -355,6 +362,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	// When the task index is even, the Plonk proof is verified
 	VerificationResult := o.VerifyPlonkProof()
 	o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
+
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 		ProofIsCorrect:     VerificationResult,
@@ -378,22 +386,6 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 	}
 	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
 	return signedTaskResponse, nil
-}
-
-// Load the Cairo proof from disk and verify it using the Cairo Platinum verifier
-func (o *Operator) VerifyCairoProof() bool {
-	f, err := os.Open("tests/testing_data/fibo_5.proof")
-	if err != nil {
-		o.logger.Error("Could not open proof file")
-	}
-	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
-	proofLen, err := f.Read(proofBuffer)
-	if err != nil {
-		o.logger.Error("Could not read bytes from file")
-	}
-
-	VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
-	return VerificationResult
 }
 
 // Load the PLONK proof, verification key and public witness from disk and verify it using
@@ -442,16 +434,4 @@ func (o *Operator) VerifyPlonkProof() bool {
 	} else {
 		return true
 	}
-}
-
-// Function to encapsulate all the logic for rejecting the randomly generated Cairo proof.
-// Just leaving this in case it is useful for demonstration.
-func (o *Operator) RejectRandomCairoProof(proof []byte) bool {
-	// Since the Cairo verifier expects the proof to be written in a buffer of length MAX_PROOF_SIZE,
-	// we copy the contents of the proof sent in the task to a buffer of that size.
-	proofLen := (uint)(len(proof))
-	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
-	copy(proofBuffer, proof)
-
-	return cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), proofLen)
 }

@@ -3,6 +3,7 @@ package aggregator
 import (
 	"context"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 
@@ -163,10 +164,12 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 
 	// We are randomizing bytes for bad proofs, all should fail
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	bad_proof := make([]byte, 32)
-	r.Read(bad_proof)
+	var proof []byte
+	badProof := make([]byte, 32)
+	r.Read(badProof)
+	proof = badProof
 
-	_ = agg.sendNewTask(bad_proof)
+	_ = agg.sendNewTask(proof)
 	taskNum++
 
 	for {
@@ -177,8 +180,19 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
-			r.Read(bad_proof)
-			err := agg.sendNewTask(bad_proof)
+			if r.Intn(2) == 0 {
+				var err error
+				proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
+				if err != nil {
+					panic("Could not read proof file")
+				}
+			} else {
+				badProof := make([]byte, 32)
+				r.Read(badProof)
+				proof = badProof
+			}
+
+			err := agg.sendNewTask(proof)
 			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
@@ -232,8 +246,7 @@ func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg
 // sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
 // with the information of operators opted into quorum 0 at the block of task creation.
 func (agg *Aggregator) sendNewTask(proof []byte) error {
-	agg.logger.Info("Aggregator sending new task", "Verify CAIRO/PLONK proof", proof)
-	// Send number to square to the task manager contract
+	agg.logger.Info("Aggregator sending new task", "Verify CAIRO/PLONK proof")
 	newTask, taskIndex, err := agg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 	if err != nil {
 		agg.logger.Error("Aggregator failed to send proof", "err", err)
@@ -253,4 +266,14 @@ func (agg *Aggregator) sendNewTask(proof []byte) error {
 	taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
 	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, newTask.QuorumNumbers, quorumThresholdPercentages, taskTimeToExpiry)
 	return nil
+}
+
+func loadValidProof() []byte {
+	var err error
+	proof, err := os.ReadFile("tests/testing_data/fibo_5.proof")
+	if err != nil {
+		panic("Could not read proof file")
+	}
+
+	return proof
 }
