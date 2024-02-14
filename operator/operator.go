@@ -1,6 +1,7 @@
 package operator
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -332,11 +333,13 @@ func (o *Operator) Start(ctx context.Context) error {
 func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
 
-	proofLen := (uint)(len(newTaskCreatedLog.Task.Proof))
+	proof := newTaskCreatedLog.Task.Proof
+
+	proofLen := (uint)(len(proof))
 	o.logger.Info("Received new task with proof to verify",
 		"proofLen: ", proofLen,
-		"proofFirstBytes", "0x"+hex.EncodeToString(newTaskCreatedLog.Task.Proof[0:8]),
-		"proofLastBytes", "0x"+hex.EncodeToString(newTaskCreatedLog.Task.Proof[proofLen-8:proofLen]),
+		"proofFirstBytes", "0x"+hex.EncodeToString(proof[0:8]),
+		"proofLastBytes", "0x"+hex.EncodeToString(proof[proofLen-8:proofLen]),
 		"taskIndex", newTaskCreatedLog.TaskIndex,
 		"taskCreatedBlock", newTaskCreatedLog.Task.TaskCreatedBlock,
 		"quorumNumbers", newTaskCreatedLog.Task.QuorumNumbers,
@@ -346,7 +349,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	// For demonstration purposes, when the task index is even, a valid Cairo proof is read and verified.
 	if newTaskCreatedLog.TaskIndex%2 == 0 {
 		proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
-		copy(proofBuffer, newTaskCreatedLog.Task.Proof)
+		copy(proofBuffer, proof)
 
 		VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
 
@@ -360,7 +363,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	}
 
 	// When the task index is even, the Plonk proof is verified
-	VerificationResult := o.VerifyPlonkProof()
+	VerificationResult := o.VerifyPlonkProof(proof)
 	o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
 
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
@@ -390,34 +393,30 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 
 // Load the PLONK proof, verification key and public witness from disk and verify it using
 // the Gnark PLONK verifier
-func (o *Operator) VerifyPlonkProof() bool {
-	proofFile, err := os.Open("operator/plonk_data/plonk_cubic_circuit.proof")
-	if err != nil {
-		panic("Could not open proof file")
-	}
-	vkFile, err := os.Open("operator/plonk_data/plonk_verification_key")
+func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
+	vkFile, err := os.Open("tests/testing_data/plonk_verification_key")
 	if err != nil {
 		panic("Could not open verification key file")
 	}
-	witnessFile, err := os.Open("operator/plonk_data/witness.pub")
-	if err != nil {
-		panic("Could not open witness file")
-	}
-	defer proofFile.Close()
-	defer vkFile.Close()
-	defer witnessFile.Close()
 
+	defer vkFile.Close()
+
+	fmt.Println("Proof len:", len(proofBytes))
+
+	proofReader := bytes.NewReader(proofBytes)
 	proof := plonk.NewProof(ecc.BLS12_381)
-	_, err = proof.ReadFrom(proofFile)
+	_, err = proof.ReadFrom(proofReader)
+
+	// If the proof can't be deserialized from the bytes then it doesn't verifies
 	if err != nil {
-		panic("Could not read proof from file")
+		return false
 	}
 
 	publicWitness, err := witness.New(ecc.BLS12_381.ScalarField())
 	if err != nil {
 		panic("Error instantiating witness")
 	}
-	_, err = publicWitness.ReadFrom(witnessFile)
+
 	if err != nil {
 		panic("Could not read witness from file")
 	}
@@ -427,6 +426,8 @@ func (o *Operator) VerifyPlonkProof() bool {
 	if err != nil {
 		panic("Could not read verifying key from file")
 	}
+
+	fmt.Println("Running gnark verification")
 
 	err = plonk.Verify(proof, vk, publicWitness)
 	if err != nil {

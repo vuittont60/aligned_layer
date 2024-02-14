@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"os"
 	"sync"
@@ -180,20 +181,46 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
-			if r.Intn(2) == 0 {
-				var err error
-				proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
-				if err != nil {
-					panic("Could not read proof file")
+
+			taskNum++
+
+			// Agreggator is creating the tasks, this should be moved in the future
+			// If taskNum % 2 == 0 we send a verify Cairo task
+			// if taskNum % 2 =0 1 we send a verify Gnark Plonk task
+			// This should be an additional parameter of configuration
+
+			if taskNum%2 == 0 {
+				// Randomly creates tasks to verify correct and incorrect cairo proofs
+				if r.Intn(3) != 0 {
+					fmt.Println("Task: Expected true Cairo proof")
+					var err error
+					proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
+					if err != nil {
+						panic("Could not read proof file")
+					}
+				} else {
+					fmt.Println("Task: Expected false Cairo proof")
+					badProof := make([]byte, 32)
+					r.Read(badProof)
+					proof = badProof
 				}
 			} else {
-				badProof := make([]byte, 32)
-				r.Read(badProof)
-				proof = badProof
+				if r.Intn(3) != 0 {
+					fmt.Println("Task: Expected true plonk proof")
+					var err error
+					proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
+					if err != nil {
+						panic("Could not open proof file")
+					}
+				} else {
+					fmt.Println("Task: Expected false plonk proof")
+					badProof := make([]byte, 32)
+					r.Read(badProof)
+					proof = badProof
+				}
 			}
 
 			err := agg.sendNewTask(proof)
-			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
 				continue
