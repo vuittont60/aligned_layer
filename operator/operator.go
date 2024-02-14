@@ -17,6 +17,7 @@ import (
 	"github.com/Layr-Labs/incredible-squaring-avs/core"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
+	"github.com/Layr-Labs/incredible-squaring-avs/operator/cairo_platinum"
 	"github.com/Layr-Labs/incredible-squaring-avs/types"
 
 	sdkavsregistry "github.com/Layr-Labs/eigensdk-go/chainio/avsregistry"
@@ -337,6 +338,67 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 
+	// For demonstration purposes, when the task index is even, a valid Cairo proof is read and verified.
+	if newTaskCreatedLog.TaskIndex%2 == 0 {
+
+		VerificationResult := o.VerifyCairoProof()
+
+		o.logger.Infof("CAIRO proof verification result: %t", VerificationResult)
+		taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
+			ProofIsCorrect:     VerificationResult,
+		}
+
+		return taskResponse
+	}
+
+	// When the task index is even, the Plonk proof is verified
+	VerificationResult := o.VerifyPlonkProof()
+	o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
+	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
+		ProofIsCorrect:     VerificationResult,
+	}
+
+	return taskResponse
+}
+
+func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
+	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
+
+	if err != nil {
+		o.logger.Error("Error getting task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
+		return nil, err
+	}
+	blsSignature := o.blsKeypair.SignMessage(taskResponseHash)
+	signedTaskResponse := &aggregator.SignedTaskResponse{
+		TaskResponse: *taskResponse,
+		BlsSignature: *blsSignature,
+		OperatorId:   o.operatorId,
+	}
+	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
+	return signedTaskResponse, nil
+}
+
+// Load the Cairo proof from disk and verify it using the Cairo Platinum verifier
+func (o *Operator) VerifyCairoProof() bool {
+	f, err := os.Open("tests/testing_data/fibo_5.proof")
+	if err != nil {
+		o.logger.Error("Could not open proof file")
+	}
+	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+	proofLen, err := f.Read(proofBuffer)
+	if err != nil {
+		o.logger.Error("Could not read bytes from file")
+	}
+
+	VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
+	return VerificationResult
+}
+
+// Load the PLONK proof, verification key and public witness from disk and verify it using
+// the Gnark PLONK verifier
+func (o *Operator) VerifyPlonkProof() bool {
 	proofFile, err := os.Open("operator/plonk_data/plonk_cubic_circuit.proof")
 	if err != nil {
 		panic("Could not open proof file")
@@ -375,36 +437,21 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	}
 
 	err = plonk.Verify(proof, vk, publicWitness)
-	var VerificationResult bool
 	if err != nil {
-		VerificationResult = false
+		return false
 	} else {
-		VerificationResult = true
+		return true
 	}
-
-	o.logger.Infof("Verification result: %t", VerificationResult)
-
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
-		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
-		ProofIsCorrect:     VerificationResult,
-	}
-
-	return taskResponse
 }
 
-func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
-	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
+// Function to encapsulate all the logic for rejecting the randomly generated Cairo proof.
+// Just leaving this in case it is useful for demonstration.
+func (o *Operator) RejectRandomCairoProof(proof []byte) bool {
+	// Since the Cairo verifier expects the proof to be written in a buffer of length MAX_PROOF_SIZE,
+	// we copy the contents of the proof sent in the task to a buffer of that size.
+	proofLen := (uint)(len(proof))
+	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+	copy(proofBuffer, proof)
 
-	if err != nil {
-		o.logger.Error("Error getting task response header hash. skipping task (this is not expected and should be investigated)", "err", err)
-		return nil, err
-	}
-	blsSignature := o.blsKeypair.SignMessage(taskResponseHash)
-	signedTaskResponse := &aggregator.SignedTaskResponse{
-		TaskResponse: *taskResponse,
-		BlsSignature: *blsSignature,
-		OperatorId:   o.operatorId,
-	}
-	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
-	return signedTaskResponse, nil
+	return cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), proofLen)
 }
