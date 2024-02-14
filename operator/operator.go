@@ -14,6 +14,7 @@ import (
 	"github.com/Layr-Labs/incredible-squaring-avs/core"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
+	"github.com/Layr-Labs/incredible-squaring-avs/operator/cairo_platinum"
 	"github.com/Layr-Labs/incredible-squaring-avs/types"
 
 	sdkavsregistry "github.com/Layr-Labs/eigensdk-go/chainio/avsregistry"
@@ -334,7 +335,38 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 
-	VerificationResult := false
+	// For demonstration purposes, when the task index is even, a valid proof is read and verified.
+	if newTaskCreatedLog.TaskIndex%2 == 0 {
+		f, err := os.Open("tests/testing_data/fibo_5.proof")
+		if err != nil {
+			o.logger.Error("Could not open proof file")
+		}
+		proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+		proofLen, err := f.Read(proofBuffer)
+		if err != nil {
+			o.logger.Error("Could not read bytes from file")
+		}
+
+		VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
+
+		o.logger.Infof("Proof verification result: %t", VerificationResult)
+		taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
+			ProofIsCorrect:     VerificationResult,
+		}
+
+		return taskResponse
+	}
+
+	// Since the Cairo verifier expects the proof to be written in a buffer of length MAX_PROOF_SIZE,
+	// we copy the contents of the proof sent in the task to a buffer of that size.
+	proofLen := (uint)(len(newTaskCreatedLog.Task.Proof))
+	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+	copy(proofBuffer, newTaskCreatedLog.Task.Proof)
+
+	VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), proofLen)
+
+	o.logger.Infof("Proof verification result: %t", VerificationResult)
 
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
