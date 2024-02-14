@@ -232,7 +232,7 @@ func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg
 // sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
 // with the information of operators opted into quorum 0 at the block of task creation.
 func (agg *Aggregator) sendNewTask(proof []byte) error {
-	agg.logger.Info("Aggregator sending new task", "Verify Cairo Proof", proof)
+	agg.logger.Info("Aggregator sending new task", "Verify CAIRO/PLONK proof", proof)
 	// Send number to square to the task manager contract
 	newTask, taskIndex, err := agg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 	if err != nil {

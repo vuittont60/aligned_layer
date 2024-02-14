@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/consensys/gnark-crypto/ecc"
+	"github.com/consensys/gnark/backend/plonk"
+	"github.com/consensys/gnark/backend/witness"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/prometheus/client_golang/prometheus"
@@ -335,21 +338,12 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 
-	// For demonstration purposes, when the task index is even, a valid proof is read and verified.
+	// For demonstration purposes, when the task index is even, a valid Cairo proof is read and verified.
 	if newTaskCreatedLog.TaskIndex%2 == 0 {
-		f, err := os.Open("tests/testing_data/fibo_5.proof")
-		if err != nil {
-			o.logger.Error("Could not open proof file")
-		}
-		proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
-		proofLen, err := f.Read(proofBuffer)
-		if err != nil {
-			o.logger.Error("Could not read bytes from file")
-		}
 
-		VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
+		VerificationResult := o.VerifyCairoProof()
 
-		o.logger.Infof("Proof verification result: %t", VerificationResult)
+		o.logger.Infof("CAIRO proof verification result: %t", VerificationResult)
 		taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 			ProofIsCorrect:     VerificationResult,
@@ -358,16 +352,9 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		return taskResponse
 	}
 
-	// Since the Cairo verifier expects the proof to be written in a buffer of length MAX_PROOF_SIZE,
-	// we copy the contents of the proof sent in the task to a buffer of that size.
-	proofLen := (uint)(len(newTaskCreatedLog.Task.Proof))
-	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
-	copy(proofBuffer, newTaskCreatedLog.Task.Proof)
-
-	VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), proofLen)
-
-	o.logger.Infof("Proof verification result: %t", VerificationResult)
-
+	// When the task index is even, the Plonk proof is verified
+	VerificationResult := o.VerifyPlonkProof()
+	o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
 	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 		ProofIsCorrect:     VerificationResult,
@@ -391,4 +378,80 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 	}
 	o.logger.Debug("Signed task response", "signedTaskResponse", signedTaskResponse)
 	return signedTaskResponse, nil
+}
+
+// Load the Cairo proof from disk and verify it using the Cairo Platinum verifier
+func (o *Operator) VerifyCairoProof() bool {
+	f, err := os.Open("tests/testing_data/fibo_5.proof")
+	if err != nil {
+		o.logger.Error("Could not open proof file")
+	}
+	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+	proofLen, err := f.Read(proofBuffer)
+	if err != nil {
+		o.logger.Error("Could not read bytes from file")
+	}
+
+	VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
+	return VerificationResult
+}
+
+// Load the PLONK proof, verification key and public witness from disk and verify it using
+// the Gnark PLONK verifier
+func (o *Operator) VerifyPlonkProof() bool {
+	proofFile, err := os.Open("operator/plonk_data/plonk_cubic_circuit.proof")
+	if err != nil {
+		panic("Could not open proof file")
+	}
+	vkFile, err := os.Open("operator/plonk_data/plonk_verification_key")
+	if err != nil {
+		panic("Could not open verification key file")
+	}
+	witnessFile, err := os.Open("operator/plonk_data/witness.pub")
+	if err != nil {
+		panic("Could not open witness file")
+	}
+	defer proofFile.Close()
+	defer vkFile.Close()
+	defer witnessFile.Close()
+
+	proof := plonk.NewProof(ecc.BLS12_381)
+	_, err = proof.ReadFrom(proofFile)
+	if err != nil {
+		panic("Could not read proof from file")
+	}
+
+	publicWitness, err := witness.New(ecc.BLS12_381.ScalarField())
+	if err != nil {
+		panic("Error instantiating witness")
+	}
+	_, err = publicWitness.ReadFrom(witnessFile)
+	if err != nil {
+		panic("Could not read witness from file")
+	}
+
+	vk := plonk.NewVerifyingKey(ecc.BLS12_381)
+	_, err = vk.ReadFrom(vkFile)
+	if err != nil {
+		panic("Could not read verifying key from file")
+	}
+
+	err = plonk.Verify(proof, vk, publicWitness)
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+// Function to encapsulate all the logic for rejecting the randomly generated Cairo proof.
+// Just leaving this in case it is useful for demonstration.
+func (o *Operator) RejectRandomCairoProof(proof []byte) bool {
+	// Since the Cairo verifier expects the proof to be written in a buffer of length MAX_PROOF_SIZE,
+	// we copy the contents of the proof sent in the task to a buffer of that size.
+	proofLen := (uint)(len(proof))
+	proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
+	copy(proofBuffer, proof)
+
+	return cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), proofLen)
 }
