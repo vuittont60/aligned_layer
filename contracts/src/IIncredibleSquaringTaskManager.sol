@@ -3,6 +3,19 @@ pragma solidity ^0.8.9;
 
 import "@eigenlayer/contracts/libraries/BN254.sol";
 
+
+
+/*
+
+const (
+	LambdaworksCairo VerifierId = iota
+	GnarkPlonkBls12_381
+)
+
+*/
+
+// enum VerifierId {LambdaworksCairo, GnarkPlonkBls12_381}
+
 interface IIncredibleSquaringTaskManager {
     // EVENTS
     event NewTaskCreated(uint32 indexed taskIndex, Task task);
@@ -27,9 +40,10 @@ interface IIncredibleSquaringTaskManager {
     // STRUCTS
     struct Task {
         bytes proof;
+        uint16 verifierId;
         uint32 taskCreatedBlock;
         // task submitter decides on the criteria for a task to be completed
-        // note that this does not mean the task was "correctly" answered (i.e. the number was squared correctly)
+        // note that this does not mean the task was "correctly" answered (i.e. the proof was verified correctly)
         //      this is for the challenge logic to verify
         // task is completed (and contract will accept its TaskResponse) when each quorumNumbers specified here
         // are signed by at least quorumThresholdPercentage of the operators
@@ -59,6 +73,7 @@ interface IIncredibleSquaringTaskManager {
     // NOTE: this function creates new task.
     function createNewTask(
         bytes calldata proof,
+        uint16 verifierId,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
     ) external;

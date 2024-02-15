@@ -13,6 +13,7 @@ import (
 	logging "github.com/Layr-Labs/eigensdk-go/logging"
 	"github.com/Layr-Labs/eigensdk-go/signer"
 
+	"github.com/Layr-Labs/incredible-squaring-avs/common"
 	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
 )
@@ -23,6 +24,7 @@ type AvsWriterer interface {
 	SendNewTaskVerifyProof(
 		ctx context.Context,
 		proof []byte,
+		verifierId common.VerifierId,
 		quorumThresholdPercentage uint32,
 		quorumNumbers []byte,
 	) (cstaskmanager.IIncredibleSquaringTaskManagerTask, uint32, error)
@@ -93,9 +95,9 @@ func NewAvsWriter(signer signer.Signer, serviceManagerAddr, blsOperatorStateRetr
 }
 
 // returns the tx receipt, as well as the task index (which it gets from parsing the tx receipt logs)
-func (w *AvsWriter) SendNewTaskVerifyProof(ctx context.Context, proof []byte, quorumThresholdPercentage uint32, quorumNumbers []byte) (cstaskmanager.IIncredibleSquaringTaskManagerTask, uint32, error) {
+func (w *AvsWriter) SendNewTaskVerifyProof(ctx context.Context, proof []byte, verifierId common.VerifierId, quorumThresholdPercentage uint32, quorumNumbers []byte) (cstaskmanager.IIncredibleSquaringTaskManagerTask, uint32, error) {
 	txOpts := w.Signer.GetTxOpts()
-	tx, err := w.AvsContractBindings.TaskManager.CreateNewTask(txOpts, proof, quorumThresholdPercentage, quorumNumbers)
+	tx, err := w.AvsContractBindings.TaskManager.CreateNewTask(txOpts, proof, uint16(verifierId), quorumThresholdPercentage, quorumNumbers)
 	if err != nil {
 		w.logger.Errorf("Error assembling CreateNewTask tx")
 		return cstaskmanager.IIncredibleSquaringTaskManagerTask{}, 0, err

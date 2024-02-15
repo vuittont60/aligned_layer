@@ -18,6 +18,7 @@ import (
 	pubkeycompserv "github.com/Layr-Labs/eigensdk-go/services/pubkeycompendium"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
+	"github.com/Layr-Labs/incredible-squaring-avs/common"
 	"github.com/Layr-Labs/incredible-squaring-avs/core"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
@@ -169,7 +170,7 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	r.Read(badProof)
 	proof = badProof
 
-	_ = agg.sendNewTask(proof)
+	_ = agg.sendNewTask(proof, common.LambdaworksCairo)
 	taskNum++
 
 	for {
@@ -201,6 +202,11 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 					r.Read(badProof)
 					proof = badProof
 				}
+				err := agg.sendNewTask(proof, common.LambdaworksCairo)
+				if err != nil {
+					// we log the errors inside sendNewTask() so here we just continue to the next task
+					continue
+				}
 			} else {
 				if r.Intn(3) != 0 {
 					var err error
@@ -213,13 +219,13 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 					r.Read(badProof)
 					proof = badProof
 				}
+				err := agg.sendNewTask(proof, common.GnarkPlonkBls12_381)
+				if err != nil {
+					// we log the errors inside sendNewTask() so here we just continue to the next task
+					continue
+				}
 			}
 
-			err := agg.sendNewTask(proof)
-			if err != nil {
-				// we log the errors inside sendNewTask() so here we just continue to the next task
-				continue
-			}
 		}
 	}
 }
@@ -267,9 +273,16 @@ func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg
 
 // sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
 // with the information of operators opted into quorum 0 at the block of task creation.
-func (agg *Aggregator) sendNewTask(proof []byte) error {
-	agg.logger.Info("Aggregator sending new task", "Verify CAIRO/PLONK proof")
-	newTask, taskIndex, err := agg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+func (agg *Aggregator) sendNewTask(proof []byte, verifierId common.VerifierId) error {
+
+	agg.logger.Info("Aggregator sending new task")
+	if verifierId == common.GnarkPlonkBls12_381 {
+		agg.logger.Info("- Verify gnark proof")
+	} else {
+		agg.logger.Info("- Verify cairo proof")
+	}
+
+	newTask, taskIndex, err := agg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 	if err != nil {
 		agg.logger.Error("Aggregator failed to send proof", "err", err)
 		return err
