@@ -337,7 +337,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 
 	proofLen := (uint)(len(proof))
 	o.logger.Info("Received new task with proof to verify",
-		"proofLen: ", proofLen,
+		"proofLen", proofLen,
 		"proofFirstBytes", "0x"+hex.EncodeToString(proof[0:8]),
 		"proofLastBytes", "0x"+hex.EncodeToString(proof[proofLen-8:proofLen]),
 		"taskIndex", newTaskCreatedLog.TaskIndex,
