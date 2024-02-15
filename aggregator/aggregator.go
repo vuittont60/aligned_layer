@@ -184,9 +184,9 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			taskNum++
 
 			// Agreggator is creating the tasks, this should be moved in the future
-			// If taskNum % 2 == 0 we send a verify Cairo task
-			// if taskNum % 2 =0 1 we send a verify Gnark Plonk task
-			// This should be an additional parameter of configuration
+			// If taskNum is even, a verify Cairo task is sent
+			// if taskNum is odd, a verify Gnark Plonk task is sent
+			// This should be an additional configuration parameter
 
 			if taskNum%2 == 0 {
 				// Randomly creates tasks to verify correct and incorrect cairo proofs
