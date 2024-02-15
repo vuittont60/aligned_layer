@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Rust toolchain install
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install libudev1
+        run: apt update && apt install libudev1
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21"
