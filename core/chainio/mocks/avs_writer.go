@@ -14,8 +14,9 @@ import (
 
 	contractBLSPubkeyRegistry "github.com/Layr-Labs/eigensdk-go/contracts/bindings/BLSPubkeyRegistry"
 	contractBLSRegistryCoordinatorWithIndices "github.com/Layr-Labs/eigensdk-go/contracts/bindings/BLSRegistryCoordinatorWithIndices"
+	common "github.com/Layr-Labs/incredible-squaring-avs/common"
 	contractIncredibleSquaringTaskManager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	common "github.com/ethereum/go-ethereum/common"
+	common0 "github.com/ethereum/go-ethereum/common"
 	types "github.com/ethereum/go-ethereum/core/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -44,7 +45,7 @@ func (m *MockAvsWriterer) EXPECT() *MockAvsWritererMockRecorder {
 }
 
 // DeregisterOperator mocks base method.
-func (m *MockAvsWriterer) DeregisterOperator(arg0 context.Context, arg1 common.Address, arg2 []byte, arg3 contractBLSPubkeyRegistry.BN254G1Point) (*types.Receipt, error) {
+func (m *MockAvsWriterer) DeregisterOperator(arg0 context.Context, arg1 common0.Address, arg2 []byte, arg3 contractBLSPubkeyRegistry.BN254G1Point) (*types.Receipt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeregisterOperator", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*types.Receipt)
@@ -104,9 +105,9 @@ func (mr *MockAvsWritererMockRecorder) SendAggregatedResponse(arg0, arg1, arg2, 
 }
 
 // SendNewTaskVerifyProof mocks base method.
-func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 []byte, arg2 uint32, arg3 []byte) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
+func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 []byte, arg2 common.VerifierId, arg3 uint32, arg4 []byte) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SendNewTaskVerifyProof", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "SendNewTaskVerifyProof", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
@@ -114,13 +115,13 @@ func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 []by
 }
 
 // SendNewTaskVerifyProof indicates an expected call of SendNewTaskVerifyProof.
-func (mr *MockAvsWritererMockRecorder) SendNewTaskVerifyProof(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockAvsWritererMockRecorder) SendNewTaskVerifyProof(arg0, arg1, arg2, arg3, arg4 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewTaskVerifyProof", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewTaskVerifyProof), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendNewTaskVerifyProof", reflect.TypeOf((*MockAvsWriterer)(nil).SendNewTaskVerifyProof), arg0, arg1, arg2, arg3, arg4)
 }
 
 // UpdateStakes mocks base method.
-func (m *MockAvsWriterer) UpdateStakes(arg0 context.Context, arg1 []common.Address) (*types.Receipt, error) {
+func (m *MockAvsWriterer) UpdateStakes(arg0 context.Context, arg1 []common0.Address) (*types.Receipt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateStakes", arg0, arg1)
 	ret0, _ := ret[0].(*types.Receipt)
