@@ -2,7 +2,6 @@ package aggregator
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"os"
 	"sync"
@@ -192,28 +191,24 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			if taskNum%2 == 0 {
 				// Randomly creates tasks to verify correct and incorrect cairo proofs
 				if r.Intn(3) != 0 {
-					fmt.Println("Task: Expected true Cairo proof")
 					var err error
 					proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
 					if err != nil {
-						panic("Could not read proof file")
+						panic("Could not read Cairo proof file")
 					}
 				} else {
-					fmt.Println("Task: Expected false Cairo proof")
 					badProof := make([]byte, 32)
 					r.Read(badProof)
 					proof = badProof
 				}
 			} else {
 				if r.Intn(3) != 0 {
-					fmt.Println("Task: Expected true plonk proof")
 					var err error
 					proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
 					if err != nil {
-						panic("Could not open proof file")
+						panic("Could not read PLONK proof file")
 					}
 				} else {
-					fmt.Println("Task: Expected false plonk proof")
 					badProof := make([]byte, 32)
 					r.Read(badProof)
 					proof = badProof
