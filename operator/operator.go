@@ -391,7 +391,7 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquar
 	return signedTaskResponse, nil
 }
 
-// Load the PLONK proof, verification key and public witness from disk and verify it using
+// Load the PLONK proof and verification key disk and verify it using
 // the Gnark PLONK verifier
 func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
 	vkFile, err := os.Open("tests/testing_data/plonk_verification_key")
@@ -400,8 +400,6 @@ func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
 	}
 
 	defer vkFile.Close()
-
-	fmt.Println("Proof len:", len(proofBytes))
 
 	proofReader := bytes.NewReader(proofBytes)
 	proof := plonk.NewProof(ecc.BLS12_381)
@@ -426,8 +424,6 @@ func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
 	if err != nil {
 		panic("Could not read verifying key from file")
 	}
-
-	fmt.Println("Running gnark verification")
 
 	err = plonk.Verify(proof, vk, publicWitness)
 	if err != nil {
