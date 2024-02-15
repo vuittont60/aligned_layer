@@ -180,20 +180,42 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 		case <-ticker.C:
-			if r.Intn(2) == 0 {
-				var err error
-				proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
-				if err != nil {
-					panic("Could not read proof file")
+
+			taskNum++
+
+			// Agreggator is creating the tasks, this should be moved in the future
+			// If taskNum is even, a verify Cairo task is sent
+			// if taskNum is odd, a verify Gnark Plonk task is sent
+			// This should be an additional configuration parameter
+
+			if taskNum%2 == 0 {
+				// Randomly creates tasks to verify correct and incorrect cairo proofs
+				if r.Intn(3) != 0 {
+					var err error
+					proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
+					if err != nil {
+						panic("Could not read Cairo proof file")
+					}
+				} else {
+					badProof := make([]byte, 32)
+					r.Read(badProof)
+					proof = badProof
 				}
 			} else {
-				badProof := make([]byte, 32)
-				r.Read(badProof)
-				proof = badProof
+				if r.Intn(3) != 0 {
+					var err error
+					proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
+					if err != nil {
+						panic("Could not read PLONK proof file")
+					}
+				} else {
+					badProof := make([]byte, 32)
+					r.Read(badProof)
+					proof = badProof
+				}
 			}
 
 			err := agg.sendNewTask(proof)
-			taskNum++
 			if err != nil {
 				// we log the errors inside sendNewTask() so here we just continue to the next task
 				continue
