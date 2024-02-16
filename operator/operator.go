@@ -7,20 +7,20 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/consensys/gnark-crypto/ecc"
-	"github.com/consensys/gnark/backend/plonk"
-	"github.com/consensys/gnark/backend/witness"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
+	"github.com/Layr-Labs/incredible-squaring-avs/common"
 	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 	"github.com/Layr-Labs/incredible-squaring-avs/core"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
 	"github.com/Layr-Labs/incredible-squaring-avs/operator/cairo_platinum"
 	"github.com/Layr-Labs/incredible-squaring-avs/types"
+	"github.com/consensys/gnark-crypto/ecc"
+	"github.com/consensys/gnark/backend/plonk"
+	"github.com/consensys/gnark/backend/witness"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	gethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/prometheus/client_golang/prometheus"
 
 	sdkavsregistry "github.com/Layr-Labs/eigensdk-go/chainio/avsregistry"
 	sdkclients "github.com/Layr-Labs/eigensdk-go/chainio/clients"
@@ -59,7 +59,7 @@ type Operator struct {
 	eigenlayerWriter sdkelcontracts.ELWriter
 	blsKeypair       *bls.KeyPair
 	operatorId       bls.OperatorId
-	operatorAddr     common.Address
+	operatorAddr     gethCommon.Address
 	// receive new tasks in this chan (typically from listening to onchain event)
 	newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
 	// ip address of aggregator
@@ -67,7 +67,7 @@ type Operator struct {
 	// rpc client to send signed task responses to aggregator
 	aggregatorRpcClient AggregatorRpcClienter
 	// needed when opting in to avs (allow this service manager contract to slash operator)
-	credibleSquaringServiceManagerAddr common.Address
+	credibleSquaringServiceManagerAddr gethCommon.Address
 }
 
 func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
@@ -143,8 +143,8 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		return nil, err
 	}
 
-	avsWriter, err := chainio.NewAvsWriter(sgn, common.HexToAddress(c.AVSServiceManagerAddress),
-		common.HexToAddress(c.BLSOperatorStateRetrieverAddress), ethRpcClient, logger,
+	avsWriter, err := chainio.NewAvsWriter(sgn, gethCommon.HexToAddress(c.AVSServiceManagerAddress),
+		gethCommon.HexToAddress(c.BLSOperatorStateRetrieverAddress), ethRpcClient, logger,
 	)
 	if err != nil {
 		logger.Error("Cannot create AvsWriter", "err", err)
@@ -152,8 +152,8 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 	}
 
 	avsServiceBindings, err := chainio.NewAvsServiceBindings(
-		common.HexToAddress(c.AVSServiceManagerAddress),
-		common.HexToAddress(c.BLSOperatorStateRetrieverAddress),
+		gethCommon.HexToAddress(c.AVSServiceManagerAddress),
+		gethCommon.HexToAddress(c.BLSOperatorStateRetrieverAddress),
 		ethRpcClient,
 		logger,
 	)
@@ -173,7 +173,7 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		return nil, err
 	}
 	avsRegistryContractClient, err := sdkclients.NewAvsRegistryContractsChainClient(
-		blsRegistryCoordinatorAddr, common.HexToAddress(c.BLSOperatorStateRetrieverAddress), stakeRegistryAddr, blsPubkeyRegistryAddr, ethRpcClient, logger,
+		blsRegistryCoordinatorAddr, gethCommon.HexToAddress(c.BLSOperatorStateRetrieverAddress), stakeRegistryAddr, blsPubkeyRegistryAddr, ethRpcClient, logger,
 	)
 	if err != nil {
 		return nil, err
@@ -187,8 +187,8 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		logger.Error("Cannot create AvsReader", "err", err)
 		return nil, err
 	}
-	avsSubscriber, err := chainio.NewAvsSubscriber(common.HexToAddress(c.AVSServiceManagerAddress),
-		common.HexToAddress(c.BLSOperatorStateRetrieverAddress), ethWsClient, logger,
+	avsSubscriber, err := chainio.NewAvsSubscriber(gethCommon.HexToAddress(c.AVSServiceManagerAddress),
+		gethCommon.HexToAddress(c.BLSOperatorStateRetrieverAddress), ethWsClient, logger,
 	)
 	if err != nil {
 		logger.Error("Cannot create AvsSubscriber", "err", err)
@@ -201,7 +201,7 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		return nil, err
 	}
 
-	elContractsClient, err := sdkclients.NewELContractsChainClient(slasherAddr, common.HexToAddress(c.BlsPublicKeyCompendiumAddress), ethRpcClient, ethWsClient, logger)
+	elContractsClient, err := sdkclients.NewELContractsChainClient(slasherAddr, gethCommon.HexToAddress(c.BlsPublicKeyCompendiumAddress), ethRpcClient, ethWsClient, logger)
 	if err != nil {
 		logger.Error("Cannot create ELContractsChainClient", "err", err)
 		return nil, err
@@ -223,7 +223,7 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 	quorumNames := map[sdktypes.QuorumNum]string{
 		0: "quorum0",
 	}
-	economicMetricsCollector := economic.NewCollector(eigenlayerReader, avsRegistryReader, AVS_NAME, logger, common.HexToAddress(c.OperatorAddress), quorumNames)
+	economicMetricsCollector := economic.NewCollector(eigenlayerReader, avsRegistryReader, AVS_NAME, logger, gethCommon.HexToAddress(c.OperatorAddress), quorumNames)
 	reg.MustRegister(economicMetricsCollector)
 
 	aggregatorRpcClient, err := NewAggregatorRpcClient(c.AggregatorServerIpPortAddress, logger, avsAndEigenMetrics)
@@ -245,17 +245,17 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		eigenlayerReader:                   eigenlayerReader,
 		eigenlayerWriter:                   eigenlayerWriter,
 		blsKeypair:                         blsKeyPair,
-		operatorAddr:                       common.HexToAddress(c.OperatorAddress),
+		operatorAddr:                       gethCommon.HexToAddress(c.OperatorAddress),
 		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
 		aggregatorRpcClient:                aggregatorRpcClient,
 		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
-		credibleSquaringServiceManagerAddr: common.HexToAddress(c.AVSServiceManagerAddress),
+		credibleSquaringServiceManagerAddr: gethCommon.HexToAddress(c.AVSServiceManagerAddress),
 		operatorId:                         [32]byte{0}, // this is set below
 
 	}
 
 	if c.RegisterOperatorOnStartup {
-		operator.registerOperatorOnStartup(common.HexToAddress(c.BlsPublicKeyCompendiumAddress))
+		operator.registerOperatorOnStartup(gethCommon.HexToAddress(c.BlsPublicKeyCompendiumAddress))
 	}
 
 	// OperatorId is set in contract during registration so we get it after registering operator.
@@ -334,6 +334,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
 
 	proof := newTaskCreatedLog.Task.Proof
+	verifierId := newTaskCreatedLog.Task.VerifierId
 
 	proofLen := (uint)(len(proof))
 	o.logger.Info("Received new task with proof to verify",
@@ -347,7 +348,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	)
 
 	// For demonstration purposes, when the task index is even, a valid Cairo proof is read and verified.
-	if newTaskCreatedLog.TaskIndex%2 == 0 {
+	if verifierId == uint16(common.LambdaworksCairo) {
 		proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
 		copy(proofBuffer, proof)
 

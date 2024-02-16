@@ -22,3 +22,10 @@ type OperatorInfo struct {
 	OperatorPubkeys sdktypes.OperatorPubkeys
 	OperatorAddr    common.Address
 }
+
+type VerifierId uint16
+
+const (
+	LambdaworksCairo VerifierId = iota
+	GnarkPlonkBls12_381
+)

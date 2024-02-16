@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
-	"github.com/ethereum/go-ethereum/common"
+	gethCommon "github.com/ethereum/go-ethereum/common"
 	gethcore "github.com/ethereum/go-ethereum/core"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -21,6 +21,7 @@ import (
 
 	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/mocks"
 	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
+	"github.com/Layr-Labs/incredible-squaring-avs/common"
 	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
 	chainiomocks "github.com/Layr-Labs/incredible-squaring-avs/core/chainio/mocks"
 )
@@ -51,7 +52,7 @@ func TestSendNewTask(t *testing.T) {
 				G1Pubkey: MOCK_OPERATOR_G1PUBKEY,
 				G2Pubkey: MOCK_OPERATOR_G2PUBKEY,
 			},
-			OperatorAddr: common.Address{},
+			OperatorAddr: gethCommon.Address{},
 		},
 	}
 
@@ -77,7 +78,7 @@ func TestSendNewTask(t *testing.T) {
 	// see https://hynek.me/articles/what-to-mock-in-5-mins/
 	mockBlsAggService.EXPECT().InitializeNewTask(TASK_INDEX, BLOCK_NUMBER, types.QUORUM_NUMBERS, []uint32{types.QUORUM_THRESHOLD_NUMERATOR}, taskTimeToExpiry)
 
-	err = aggregator.sendNewTask(badProof)
+	err = aggregator.sendNewTask(badProof, common.LambdaworksCairo)
 	assert.Nil(t, err)
 }
 
@@ -101,7 +102,7 @@ func createMockAggregator(
 // just a mock ethclient to pass to bindings
 // so that we can access abi methods
 func createMockEthClient() *backends.SimulatedBackend {
-	genesisAlloc := map[common.Address]gethcore.GenesisAccount{}
+	genesisAlloc := map[gethCommon.Address]gethcore.GenesisAccount{}
 	blockGasLimit := uint64(1000000)
 	client := backends.NewSimulatedBackend(genesisAlloc, blockGasLimit)
 	return client

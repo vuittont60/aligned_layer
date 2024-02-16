@@ -82,12 +82,14 @@ contract IncredibleSquaringTaskManager is
     // NOTE: this function creates new task, assigns it a taskId
     function createNewTask(
         bytes calldata proof,
+        uint16 verifierId,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
     ) external onlyTaskGenerator {
         // create a new task struct
         Task memory newTask;
         newTask.proof = proof;
+        newTask.verifierId = verifierId;
         newTask.taskCreatedBlock = uint32(block.number);
         newTask.quorumThresholdPercentage = quorumThresholdPercentage;
         newTask.quorumNumbers = quorumNumbers;
