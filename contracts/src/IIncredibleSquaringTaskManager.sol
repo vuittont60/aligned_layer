@@ -3,19 +3,6 @@ pragma solidity ^0.8.9;
 
 import "@eigenlayer/contracts/libraries/BN254.sol";
 
-
-
-/*
-
-const (
-	LambdaworksCairo VerifierId = iota
-	GnarkPlonkBls12_381
-)
-
-*/
-
-// enum VerifierId {LambdaworksCairo, GnarkPlonkBls12_381}
-
 interface IIncredibleSquaringTaskManager {
     // EVENTS
     event NewTaskCreated(uint32 indexed taskIndex, Task task);
