@@ -289,13 +289,3 @@ func (agg *Aggregator) sendNewTask(proof []byte) error {
 	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, newTask.QuorumNumbers, quorumThresholdPercentages, taskTimeToExpiry)
 	return nil
 }
-
-func loadValidProof() []byte {
-	var err error
-	proof, err := os.ReadFile("tests/testing_data/fibo_5.proof")
-	if err != nil {
-		panic("Could not read proof file")
-	}
-
-	return proof
-}

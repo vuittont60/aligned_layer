@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -41,19 +40,24 @@ func TestIntegration(t *testing.T) {
 		t.Error(err)
 	}
 
+	rootDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get root directory: %s", err.Error())
+	}
+
 	/* Prepare the config file for aggregator */
 	var aggConfigRaw config.ConfigRaw
-	aggConfigFilePath := "../../config-files/aggregator.yaml"
+	aggConfigFilePath := rootDir + "/config-files/aggregator.yaml"
 	sdkutils.ReadYamlConfig(aggConfigFilePath, &aggConfigRaw)
 	aggConfigRaw.EthRpcUrl = "http://" + anvilEndpoint
 	aggConfigRaw.EthWsUrl = "ws://" + anvilEndpoint
 
 	var credibleSquaringDeploymentRaw config.CredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := "../../contracts/script/output/31337/credible_squaring_avs_deployment_output.json"
+	credibleSquaringDeploymentFilePath := rootDir + "/contracts/script/output/31337/credible_squaring_avs_deployment_output.json"
 	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
 
 	var sharedAvsContractsDeploymentRaw config.SharedAvsContractsRaw
-	sharedAvsContractsDeploymentFilePath := "../../contracts/script/output/31337/shared_avs_contracts_deployment_output.json"
+	sharedAvsContractsDeploymentFilePath := rootDir + "/contracts/script/output/31337/shared_avs_contracts_deployment_output.json"
 	sdkutils.ReadJsonConfig(sharedAvsContractsDeploymentFilePath, &sharedAvsContractsDeploymentRaw)
 
 	logger, err := sdklogging.NewZapLogger(aggConfigRaw.Environment)
@@ -111,7 +115,7 @@ func TestIntegration(t *testing.T) {
 
 	/* Prepare the config file for operator */
 	nodeConfig := types.NodeConfig{}
-	nodeConfigFilePath := "../../config-files/operator.anvil.yaml"
+	nodeConfigFilePath := rootDir + "/config-files/operator.anvil.yaml"
 	err = sdkutils.ReadYamlConfig(nodeConfigFilePath, &nodeConfig)
 	if err != nil {
 		t.Fatalf("Failed to read yaml config: %s", err.Error())
@@ -134,8 +138,8 @@ func TestIntegration(t *testing.T) {
 	log.Println("starting operator for integration tests")
 	os.Setenv("OPERATOR_BLS_KEY_PASSWORD", "")
 	os.Setenv("OPERATOR_ECDSA_KEY_PASSWORD", "")
-	nodeConfig.BlsPrivateKeyStorePath = "../keys/test.bls.key.json"
-	nodeConfig.EcdsaPrivateKeyStorePath = "../keys/test.ecdsa.key.json"
+	nodeConfig.BlsPrivateKeyStorePath = rootDir + "/tests/keys/test.bls.key.json"
+	nodeConfig.EcdsaPrivateKeyStorePath = rootDir + "/tests/keys/test.ecdsa.key.json"
 	nodeConfig.RegisterOperatorOnStartup = true
 	nodeConfig.EthRpcUrl = "http://" + anvilEndpoint
 	nodeConfig.EthWsUrl = "ws://" + anvilEndpoint
@@ -185,10 +189,12 @@ func TestIntegration(t *testing.T) {
 }
 
 func startAnvilTestContainer() testcontainers.Container {
-	integrationDir, err := os.Getwd()
+	rootDir, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
+
+	hostPath := rootDir + "/tests/integration/avs-and-eigenlayer-deployed-anvil-state.json"
 
 	ctx := context.Background()
 	req := testcontainers.ContainerRequest{
@@ -196,7 +202,7 @@ func startAnvilTestContainer() testcontainers.Container {
 		Mounts: testcontainers.ContainerMounts{
 			testcontainers.ContainerMount{
 				Source: testcontainers.GenericBindMountSource{
-					HostPath: filepath.Join(integrationDir, "avs-and-eigenlayer-deployed-anvil-state.json"),
+					HostPath: hostPath,
 				},
 				Target: "/root/.anvil/state.json",
 			},
