@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@eigenlayer/contracts/libraries/BN254.sol";
 
-interface IIncredibleSquaringTaskManager {
+interface IAlignedLayerTaskManager {
     // EVENTS
     event NewTaskCreated(uint32 indexed taskIndex, Task task);
 

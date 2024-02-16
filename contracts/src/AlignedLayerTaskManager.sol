@@ -10,15 +10,15 @@ import {BLSRegistryCoordinatorWithIndices} from "@eigenlayer-middleware/src/BLSR
 import {BLSSignatureChecker, IBLSRegistryCoordinatorWithIndices} from "@eigenlayer-middleware/src/BLSSignatureChecker.sol";
 import {BLSOperatorStateRetriever} from "@eigenlayer-middleware/src/BLSOperatorStateRetriever.sol";
 import "@eigenlayer/contracts/libraries/BN254.sol";
-import "./IIncredibleSquaringTaskManager.sol";
+import "./IAlignedLayerTaskManager.sol";
 
-contract IncredibleSquaringTaskManager is
+contract AlignedLayerTaskManager is
     Initializable,
     OwnableUpgradeable,
     Pausable,
     BLSSignatureChecker,
     BLSOperatorStateRetriever,
-    IIncredibleSquaringTaskManager
+    IAlignedLayerTaskManager
 {
     using BN254 for BN254.G1Point;
 
@@ -82,14 +82,12 @@ contract IncredibleSquaringTaskManager is
     // NOTE: this function creates new task, assigns it a taskId
     function createNewTask(
         bytes calldata proof,
-        uint16 verifierId,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
     ) external onlyTaskGenerator {
         // create a new task struct
         Task memory newTask;
         newTask.proof = proof;
-        newTask.verifierId = verifierId;
         newTask.taskCreatedBlock = uint32(block.number);
         newTask.quorumThresholdPercentage = quorumThresholdPercentage;
         newTask.quorumNumbers = quorumNumbers;
