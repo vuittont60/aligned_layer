@@ -13,7 +13,7 @@ import (
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
+	"github.com/yetanotherco/aligned_layer/aggregator/types"
 	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
 	"github.com/yetanotherco/aligned_layer/core"
 )
@@ -71,7 +71,7 @@ func createMockSignedTaskResponse(mockTask MockTask, keypair bls.KeyPair) (*Sign
 	badProof := make([]byte, 32)
 	r.Read(badProof)
 
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+	taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
 		ReferenceTaskIndex: mockTask.TaskNum,
 		ProofIsCorrect:     false,
 	}
