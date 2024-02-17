@@ -98,19 +98,19 @@ func TestIntegration(t *testing.T) {
 	}
 
 	config := &config.Config{
-		EcdsaPrivateKey:                      ecdsaPrivateKey,
-		Logger:                               logger,
-		EthRpcUrl:                            aggConfigRaw.EthRpcUrl,
-		EthHttpClient:                        ethRpcClient,
-		EthWsClient:                          ethWsClient,
-		BlsOperatorStateRetrieverAddr:        common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		IncredibleSquaringServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.IncredibleSquaringServiceManagerAddr),
-		SlasherAddr:                          common.HexToAddress(""),
-		AggregatorServerIpPortAddr:           aggConfigRaw.AggregatorServerIpPortAddr,
-		RegisterOperatorOnStartup:            aggConfigRaw.RegisterOperatorOnStartup,
-		Signer:                               privateKeySigner,
-		OperatorAddress:                      operatorAddr,
-		BlsPublicKeyCompendiumAddress:        common.HexToAddress(aggConfigRaw.BLSPubkeyCompendiumAddr),
+		EcdsaPrivateKey:                ecdsaPrivateKey,
+		Logger:                         logger,
+		EthRpcUrl:                      aggConfigRaw.EthRpcUrl,
+		EthHttpClient:                  ethRpcClient,
+		EthWsClient:                    ethWsClient,
+		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		SlasherAddr:                    common.HexToAddress(""),
+		AggregatorServerIpPortAddr:     aggConfigRaw.AggregatorServerIpPortAddr,
+		RegisterOperatorOnStartup:      aggConfigRaw.RegisterOperatorOnStartup,
+		Signer:                         privateKeySigner,
+		OperatorAddress:                operatorAddr,
+		BlsPublicKeyCompendiumAddress:  common.HexToAddress(aggConfigRaw.BLSPubkeyCompendiumAddr),
 	}
 
 	/* Prepare the config file for operator */
