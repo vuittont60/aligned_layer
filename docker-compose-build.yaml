@@ -1,3 +1,4 @@
+# FIXME(marian): We should change this file when we want to publish aligned layer docker images.
 # This file is used for building and pushing images
 services:
   node:
