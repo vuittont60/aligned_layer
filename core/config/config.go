@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -55,7 +56,7 @@ type CredibleSquaringDeploymentRaw struct {
 	Addresses CredibleSquaringContractsRaw `json:"addresses"`
 }
 type CredibleSquaringContractsRaw struct {
-	AlignedLayerServiceManagerAddr string `json:"credibleSquaringServiceManager"`
+	AlignedLayerServiceManagerAddr string `json:"alignedLayerServiceManager"`
 }
 
 // BlsOperatorStateRetriever and BlsPublicKeyCompendium are deployed separately, since they are
@@ -67,7 +68,7 @@ type SharedAvsContractsRaw struct {
 	BlsOperatorStateRetrieverAddr string `json:"blsOperatorStateRetriever"`
 }
 
-// NewConfig parses config file to read from from flags or environment variables
+// NewConfig parses config file to read from flags or environment variables
 // Note: This config is shared by challenger and aggregator and so we put in the core.
 // Operator has a different config and is meant to be used by the operator CLI.
 func NewConfig(ctx *cli.Context) (*Config, error) {
@@ -78,12 +79,13 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		sdkutils.ReadYamlConfig(configFilePath, &configRaw)
 	}
 
-	var credibleSquaringDeploymentRaw CredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
-	if _, err := os.Stat(credibleSquaringDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
-		panic("Path " + credibleSquaringDeploymentFilePath + " does not exist")
+	var alignedLayerDeploymentRaw CredibleSquaringDeploymentRaw
+	alignedLayerDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
+	fmt.Println("DEPLOYMENT FILE PATH: %s", alignedLayerDeploymentFilePath)
+	if _, err := os.Stat(alignedLayerDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
+		panic("Path " + alignedLayerDeploymentFilePath + " does not exist")
 	}
-	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
+	sdkutils.ReadJsonConfig(alignedLayerDeploymentFilePath, &alignedLayerDeploymentRaw)
 
 	var sharedAvsContractsDeploymentRaw SharedAvsContractsRaw
 	sharedAvsContractsDeploymentFilePath := ctx.GlobalString(SharedAvsContractsDeploymentFileFlag.Name)
@@ -137,6 +139,7 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		return nil, err
 	}
 
+	fmt.Println("ADDRESSES: ", alignedLayerDeploymentRaw.Addresses)
 	config := &Config{
 		EcdsaPrivateKey:                ecdsaPrivateKey,
 		Logger:                         logger,
@@ -144,7 +147,7 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		EthHttpClient:                  ethRpcClient,
 		EthWsClient:                    ethWsClient,
 		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(alignedLayerDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
 		SlasherAddr:                    common.HexToAddress(""),
 		AggregatorServerIpPortAddr:     configRaw.AggregatorServerIpPortAddr,
 		RegisterOperatorOnStartup:      configRaw.RegisterOperatorOnStartup,
@@ -174,7 +177,7 @@ var (
 		Usage:    "Load configuration from `FILE`",
 	}
 	CredibleSquaringDeploymentFileFlag = cli.StringFlag{
-		Name:     "credible-squaring-deployment",
+		Name:     "aligned-layer-deployment",
 		Required: true,
 		Usage:    "Load credible squaring contract addresses from `FILE`",
 	}

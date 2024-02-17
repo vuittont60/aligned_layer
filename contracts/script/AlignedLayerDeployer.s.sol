@@ -420,22 +420,22 @@ contract CredibleAlignedLayerDeployer is Script, Utils {
         );
         vm.serializeAddress(
             deployed_addresses,
-            "credibleAlignedLayerServiceManager",
+            "alignedLayerServiceManager",
             address(credibleAlignedLayerServiceManager)
         );
         vm.serializeAddress(
             deployed_addresses,
-            "credibleAlignedLayerServiceManagerImplementation",
+            "alignedLayerServiceManagerImplementation",
             address(credibleAlignedLayerServiceManagerImplementation)
         );
         vm.serializeAddress(
             deployed_addresses,
-            "credibleAlignedLayerTaskManager",
+            "alignedLayerTaskManager",
             address(credibleAlignedLayerTaskManager)
         );
         vm.serializeAddress(
             deployed_addresses,
-            "credibleAlignedLayerTaskManagerImplementation",
+            "alignedLayerTaskManagerImplementation",
             address(credibleAlignedLayerTaskManagerImplementation)
         );
         vm.serializeAddress(
@@ -456,6 +456,6 @@ contract CredibleAlignedLayerDeployer is Script, Utils {
             deployed_addresses_output
         );
 
-        writeOutput(finalJson, "credible_squaring_avs_deployment_output");
+        writeOutput(finalJson, "aligned_layer_avs_deployment_output");
     }
 }
