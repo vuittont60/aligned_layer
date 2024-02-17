@@ -11,9 +11,10 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/chainio/clients/eth"
 	logging "github.com/Layr-Labs/eigensdk-go/logging"
 
-	erc20mock "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/ERC20Mock"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
+	erc20mock "github.com/yetanotherco/aligned_layer/contracts/bindings/ERC20Mock"
+
+	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
+	"github.com/yetanotherco/aligned_layer/core/config"
 )
 
 type AvsReaderer interface {
@@ -35,7 +36,7 @@ var _ AvsReaderer = (*AvsReader)(nil)
 
 func NewAvsReaderFromConfig(c *config.Config) (*AvsReader, error) {
 
-	avsContractBindings, err := NewAvsServiceBindings(c.IncredibleSquaringServiceManagerAddr, c.BlsOperatorStateRetrieverAddr, c.EthHttpClient, c.Logger)
+	avsContractBindings, err := NewAvsServiceBindings(c.AlignedLayerServiceManagerAddr, c.BlsOperatorStateRetrieverAddr, c.EthHttpClient, c.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +65,7 @@ func NewAvsReaderFromConfig(c *config.Config) (*AvsReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	avsServiceBindings, err := NewAvsServiceBindings(c.IncredibleSquaringServiceManagerAddr, c.BlsOperatorStateRetrieverAddr, c.EthHttpClient, c.Logger)
+	avsServiceBindings, err := NewAvsServiceBindings(c.AlignedLayerServiceManagerAddr, c.BlsOperatorStateRetrieverAddr, c.EthHttpClient, c.Logger)
 	if err != nil {
 		return nil, err
 	}

@@ -27,17 +27,17 @@ type Config struct {
 	EigenMetricsIpPortAddress string
 	// we need the url for the eigensdk currently... eventually standardize api so as to
 	// only take an ethclient or an rpcUrl (and build the ethclient at each constructor site)
-	EthRpcUrl                            string
-	EthHttpClient                        eth.EthClient
-	EthWsClient                          eth.EthClient
-	BlsOperatorStateRetrieverAddr        common.Address
-	IncredibleSquaringServiceManagerAddr common.Address
-	BlsPublicKeyCompendiumAddress        common.Address
-	SlasherAddr                          common.Address
-	AggregatorServerIpPortAddr           string
-	RegisterOperatorOnStartup            bool
-	Signer                               signer.Signer
-	OperatorAddress                      common.Address
+	EthRpcUrl                      string
+	EthHttpClient                  eth.EthClient
+	EthWsClient                    eth.EthClient
+	BlsOperatorStateRetrieverAddr  common.Address
+	AlignedLayerServiceManagerAddr common.Address
+	BlsPublicKeyCompendiumAddress  common.Address
+	SlasherAddr                    common.Address
+	AggregatorServerIpPortAddr     string
+	RegisterOperatorOnStartup      bool
+	Signer                         signer.Signer
+	OperatorAddress                common.Address
 }
 
 // These are read from ConfigFileFlag
@@ -55,7 +55,7 @@ type CredibleSquaringDeploymentRaw struct {
 	Addresses CredibleSquaringContractsRaw `json:"addresses"`
 }
 type CredibleSquaringContractsRaw struct {
-	IncredibleSquaringServiceManagerAddr string `json:"credibleSquaringServiceManager"`
+	AlignedLayerServiceManagerAddr string `json:"credibleSquaringServiceManager"`
 }
 
 // BlsOperatorStateRetriever and BlsPublicKeyCompendium are deployed separately, since they are
@@ -138,19 +138,19 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 	}
 
 	config := &Config{
-		EcdsaPrivateKey:                      ecdsaPrivateKey,
-		Logger:                               logger,
-		EthRpcUrl:                            configRaw.EthRpcUrl,
-		EthHttpClient:                        ethRpcClient,
-		EthWsClient:                          ethWsClient,
-		BlsOperatorStateRetrieverAddr:        common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		IncredibleSquaringServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.IncredibleSquaringServiceManagerAddr),
-		SlasherAddr:                          common.HexToAddress(""),
-		AggregatorServerIpPortAddr:           configRaw.AggregatorServerIpPortAddr,
-		RegisterOperatorOnStartup:            configRaw.RegisterOperatorOnStartup,
-		Signer:                               privateKeySigner,
-		OperatorAddress:                      operatorAddr,
-		BlsPublicKeyCompendiumAddress:        common.HexToAddress(configRaw.BLSPubkeyCompendiumAddr),
+		EcdsaPrivateKey:                ecdsaPrivateKey,
+		Logger:                         logger,
+		EthRpcUrl:                      configRaw.EthRpcUrl,
+		EthHttpClient:                  ethRpcClient,
+		EthWsClient:                    ethWsClient,
+		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		SlasherAddr:                    common.HexToAddress(""),
+		AggregatorServerIpPortAddr:     configRaw.AggregatorServerIpPortAddr,
+		RegisterOperatorOnStartup:      configRaw.RegisterOperatorOnStartup,
+		Signer:                         privateKeySigner,
+		OperatorAddress:                operatorAddr,
+		BlsPublicKeyCompendiumAddress:  common.HexToAddress(configRaw.BLSPubkeyCompendiumAddr),
 	}
 	config.validate()
 	return config, nil
@@ -161,8 +161,8 @@ func (c *Config) validate() {
 	if c.BlsOperatorStateRetrieverAddr == common.HexToAddress("") {
 		panic("Config: BLSOperatorStateRetrieverAddr is required")
 	}
-	if c.IncredibleSquaringServiceManagerAddr == common.HexToAddress("") {
-		panic("Config: IncredibleSquaringServiceManagerAddr is required")
+	if c.AlignedLayerServiceManagerAddr == common.HexToAddress("") {
+		panic("Config: AlignedLayerServiceManagerAddr is required")
 	}
 }
 

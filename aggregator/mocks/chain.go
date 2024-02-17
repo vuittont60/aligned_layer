@@ -5,14 +5,14 @@ import (
 
 	opstateretriever "github.com/Layr-Labs/eigensdk-go/contracts/bindings/BLSOperatorStateRetriever"
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	"github.com/yetanotherco/aligned_layer/aggregator/types"
+	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
 )
 
 // ====== TaskManager Mocks ======
 
-func MockSendNewTaskVerifyProofCall(blockNum uint32, taskNum uint32, proof []byte) (cstaskmanager.IIncredibleSquaringTaskManagerTask, uint32, error) {
-	task := cstaskmanager.IIncredibleSquaringTaskManagerTask{
+func MockSendNewTaskVerifyProofCall(blockNum uint32, taskNum uint32, proof []byte) (cstaskmanager.IAlignedLayerTaskManagerTask, uint32, error) {
+	task := cstaskmanager.IAlignedLayerTaskManagerTask{
 		Proof:                     proof,
 		TaskCreatedBlock:          blockNum,
 		QuorumNumbers:             types.QUORUM_NUMBERS,

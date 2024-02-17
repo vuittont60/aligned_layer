@@ -14,8 +14,8 @@ import (
 
 	contractBLSPubkeyRegistry "github.com/Layr-Labs/eigensdk-go/contracts/bindings/BLSPubkeyRegistry"
 	contractBLSRegistryCoordinatorWithIndices "github.com/Layr-Labs/eigensdk-go/contracts/bindings/BLSRegistryCoordinatorWithIndices"
-	common "github.com/Layr-Labs/incredible-squaring-avs/common"
-	contractIncredibleSquaringTaskManager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
+	common "github.com/yetanotherco/aligned_layer/common"
+	contractAlignedLayerTaskManager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
 	common0 "github.com/ethereum/go-ethereum/common"
 	types "github.com/ethereum/go-ethereum/core/types"
 	gomock "go.uber.org/mock/gomock"
@@ -60,7 +60,7 @@ func (mr *MockAvsWritererMockRecorder) DeregisterOperator(arg0, arg1, arg2, arg3
 }
 
 // RaiseChallenge mocks base method.
-func (m *MockAvsWriterer) RaiseChallenge(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponse, arg3 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponseMetadata, arg4 []contractIncredibleSquaringTaskManager.BN254G1Point) (*types.Receipt, error) {
+func (m *MockAvsWriterer) RaiseChallenge(arg0 context.Context, arg1 contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTask, arg2 contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTaskResponse, arg3 contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTaskResponseMetadata, arg4 []contractAlignedLayerTaskManager.BN254G1Point) (*types.Receipt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RaiseChallenge", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(*types.Receipt)
@@ -90,7 +90,7 @@ func (mr *MockAvsWritererMockRecorder) RegisterOperatorWithAVSRegistryCoordinato
 }
 
 // SendAggregatedResponse mocks base method.
-func (m *MockAvsWriterer) SendAggregatedResponse(arg0 context.Context, arg1 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, arg2 contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTaskResponse, arg3 contractIncredibleSquaringTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types.Receipt, error) {
+func (m *MockAvsWriterer) SendAggregatedResponse(arg0 context.Context, arg1 contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTask, arg2 contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTaskResponse, arg3 contractAlignedLayerTaskManager.IBLSSignatureCheckerNonSignerStakesAndSignature) (*types.Receipt, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendAggregatedResponse", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*types.Receipt)
@@ -105,10 +105,10 @@ func (mr *MockAvsWritererMockRecorder) SendAggregatedResponse(arg0, arg1, arg2, 
 }
 
 // SendNewTaskVerifyProof mocks base method.
-func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 []byte, arg2 common.VerifierId, arg3 uint32, arg4 []byte) (contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask, uint32, error) {
+func (m *MockAvsWriterer) SendNewTaskVerifyProof(arg0 context.Context, arg1 []byte, arg2 common.VerifierId, arg3 uint32, arg4 []byte) (contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTask, uint32, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendNewTaskVerifyProof", arg0, arg1, arg2, arg3, arg4)
-	ret0, _ := ret[0].(contractIncredibleSquaringTaskManager.IIncredibleSquaringTaskManagerTask)
+	ret0, _ := ret[0].(contractAlignedLayerTaskManager.IAlignedLayerTaskManagerTask)
 	ret1, _ := ret[1].(uint32)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2

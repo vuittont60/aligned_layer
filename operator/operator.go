@@ -15,7 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/yetanotherco/aligned_layer/aggregator"
 	"github.com/yetanotherco/aligned_layer/common"
-	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/IncredibleSquaringTaskManager"
+	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
 	"github.com/yetanotherco/aligned_layer/core"
 	"github.com/yetanotherco/aligned_layer/core/chainio"
 	"github.com/yetanotherco/aligned_layer/metrics"
@@ -61,7 +61,7 @@ type Operator struct {
 	operatorId       bls.OperatorId
 	operatorAddr     gethCommon.Address
 	// receive new tasks in this chan (typically from listening to onchain event)
-	newTaskCreatedChan chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
+	newTaskCreatedChan chan *cstaskmanager.ContractAlignedLayerTaskManagerNewTaskCreated
 	// ip address of aggregator
 	aggregatorServerIpPortAddr string
 	// rpc client to send signed task responses to aggregator
@@ -248,7 +248,7 @@ func NewOperatorFromConfig(c types.NodeConfig) (*Operator, error) {
 		operatorAddr:                       gethCommon.HexToAddress(c.OperatorAddress),
 		aggregatorServerIpPortAddr:         c.AggregatorServerIpPortAddress,
 		aggregatorRpcClient:                aggregatorRpcClient,
-		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		newTaskCreatedChan:                 make(chan *cstaskmanager.ContractAlignedLayerTaskManagerNewTaskCreated),
 		credibleSquaringServiceManagerAddr: gethCommon.HexToAddress(c.AVSServiceManagerAddress),
 		operatorId:                         [32]byte{0}, // this is set below
 
@@ -330,7 +330,7 @@ func (o *Operator) Start(ctx context.Context) error {
 
 // Takes a NewTaskCreatedLog struct as input and returns a TaskResponseHeader struct.
 // The TaskResponseHeader struct is the struct that is signed and sent to the contract as a task response.
-func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated) *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse {
+func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.ContractAlignedLayerTaskManagerNewTaskCreated) *cstaskmanager.IAlignedLayerTaskManagerTaskResponse {
 	o.logger.Debug("Received new task", "task", newTaskCreatedLog)
 
 	proof := newTaskCreatedLog.Task.Proof
@@ -355,7 +355,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		VerificationResult := cairo_platinum.VerifyCairoProof100Bits(([cairo_platinum.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
 
 		o.logger.Infof("CAIRO proof verification result: %t", VerificationResult)
-		taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
 			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 			ProofIsCorrect:     VerificationResult,
 		}
@@ -367,7 +367,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	VerificationResult := o.VerifyPlonkProof(proof)
 	o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
 
-	taskResponse := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+	taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
 		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 		ProofIsCorrect:     VerificationResult,
 	}
@@ -375,7 +375,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 	return taskResponse
 }
 
-func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
+func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IAlignedLayerTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
 	taskResponseHash, err := core.GetTaskResponseDigest(taskResponse)
 
 	if err != nil {
