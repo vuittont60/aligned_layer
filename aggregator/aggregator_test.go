@@ -66,9 +66,10 @@ func TestSendNewTask(t *testing.T) {
 	fmt.Println(time.Now().UnixNano())
 	badProof := make([]byte, 32)
 	r.Read(badProof)
+	verifierId := common.LambdaworksCairo
 
 	mockAvsWriterer.EXPECT().SendNewTaskVerifyProof(
-		context.Background(), badProof, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
+		context.Background(), badProof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
 	).Return(mocks.MockSendNewTaskVerifyProofCall(BLOCK_NUMBER, TASK_INDEX, badProof))
 
 	// 100 blocks, each takes 12 seconds. We hardcode for now since aggregator also hardcodes this value

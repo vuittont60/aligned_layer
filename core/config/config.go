@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -81,7 +80,6 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 
 	var alignedLayerDeploymentRaw CredibleSquaringDeploymentRaw
 	alignedLayerDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
-	fmt.Println("DEPLOYMENT FILE PATH: %s", alignedLayerDeploymentFilePath)
 	if _, err := os.Stat(alignedLayerDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
 		panic("Path " + alignedLayerDeploymentFilePath + " does not exist")
 	}
@@ -139,7 +137,6 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		return nil, err
 	}
 
-	fmt.Println("ADDRESSES: ", alignedLayerDeploymentRaw.Addresses)
 	config := &Config{
 		EcdsaPrivateKey:                ecdsaPrivateKey,
 		Logger:                         logger,
