@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
+	"fmt"
 	"os"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -38,6 +39,8 @@ type Config struct {
 	RegisterOperatorOnStartup            bool
 	Signer                               signer.Signer
 	OperatorAddress                      common.Address
+	AVSServiceManagerAddress             common.Address
+	EnableMetrics                        bool
 }
 
 // These are read from ConfigFileFlag
@@ -48,6 +51,8 @@ type ConfigRaw struct {
 	AggregatorServerIpPortAddr string              `yaml:"aggregator_server_ip_port_address"`
 	RegisterOperatorOnStartup  bool                `yaml:"register_operator_on_startup"`
 	BLSPubkeyCompendiumAddr    string              `yaml:"bls_public_key_compendium_address"`
+	AvsServiceManagerAddress   string              `yaml:"avs_service_manager_address"`
+	EnableMetrics              bool                `yaml:"enable_metrics"`
 }
 
 // These are read from CredibleSquaringDeploymentFileFlag
@@ -77,6 +82,8 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 	if configFilePath != "" {
 		sdkutils.ReadYamlConfig(configFilePath, &configRaw)
 	}
+
+	fmt.Println("CONFIG RAW: ", configRaw)
 
 	var credibleSquaringDeploymentRaw CredibleSquaringDeploymentRaw
 	credibleSquaringDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
@@ -151,6 +158,8 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		Signer:                               privateKeySigner,
 		OperatorAddress:                      operatorAddr,
 		BlsPublicKeyCompendiumAddress:        common.HexToAddress(configRaw.BLSPubkeyCompendiumAddr),
+		AVSServiceManagerAddress:             common.HexToAddress(configRaw.AvsServiceManagerAddress),
+		EnableMetrics:                        configRaw.EnableMetrics,
 	}
 	config.validate()
 	return config, nil

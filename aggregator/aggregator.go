@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -30,6 +31,7 @@ const (
 	// ideally be fetched from the contracts
 	taskChallengeWindowBlock = 100
 	blockTimeSeconds         = 12 * time.Second
+	AVS_NAME                 = "aligned-layer"
 )
 
 // Aggregator sends tasks (numbers to square) onchain, then listens for operator signed TaskResponses.
@@ -73,6 +75,8 @@ type Aggregator struct {
 	blsAggregationService blsagg.BlsAggregationService
 	tasks                 map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask
 	tasksMu               sync.RWMutex
+	avsSubscriber         chainio.AvsSubscriberer
+	newTaskCreatedChan    chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated
 	taskResponses         map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse
 	taskResponsesMu       sync.RWMutex
 }
@@ -113,6 +117,15 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		c.Logger.Error("Cannot get slasher address", "err", err)
 		return nil, err
 	}
+
+	avsSubscriber, err := chainio.NewAvsSubscriber(c.AVSServiceManagerAddress,
+		slasherAddr, c.EthWsClient, c.Logger,
+	)
+	if err != nil {
+		c.Logger.Error("Cannot create AvsSubscriber", "err", err)
+		return nil, err
+	}
+
 	c.Logger.Info("BlsPublicKeyCompendiumAddress", "BlsPublicKeyCompendiumAddress", c.BlsPublicKeyCompendiumAddress)
 
 	elContractsClient, err := sdkclients.NewELContractsChainClient(slasherAddr, c.BlsPublicKeyCompendiumAddress, c.EthHttpClient, c.EthWsClient, c.Logger)
@@ -143,6 +156,8 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		serverIpPortAddr:      c.AggregatorServerIpPortAddr,
 		avsWriter:             avsWriter,
 		blsAggregationService: blsAggregationService,
+		newTaskCreatedChan:    make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		avsSubscriber:         avsSubscriber,
 		tasks:                 make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask),
 		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse),
 	}, nil
@@ -174,6 +189,8 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			taskNum++
 	*/
 
+	sub := agg.avsSubscriber.SubscribeToNewTasks(agg.newTaskCreatedChan)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -181,6 +198,12 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 		case blsAggServiceResp := <-agg.blsAggregationService.GetResponseChannel():
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
+
+		case err := <-sub.Err():
+			fmt.Println("FATARL ERROR", err)
+
+		case event := <-agg.newTaskCreatedChan:
+			fmt.Println("EVENT: ", event)
 
 			/*
 				case <-ticker.C:
