@@ -10,15 +10,15 @@ import {BLSRegistryCoordinatorWithIndices} from "@eigenlayer-middleware/src/BLSR
 import {BLSSignatureChecker, IBLSRegistryCoordinatorWithIndices} from "@eigenlayer-middleware/src/BLSSignatureChecker.sol";
 import {BLSOperatorStateRetriever} from "@eigenlayer-middleware/src/BLSOperatorStateRetriever.sol";
 import "@eigenlayer/contracts/libraries/BN254.sol";
-import "./IIncredibleSquaringTaskManager.sol";
+import "./IAlignedLayerTaskManager.sol";
 
-contract IncredibleSquaringTaskManager is
+contract AlignedLayerTaskManager is
     Initializable,
     OwnableUpgradeable,
     Pausable,
     BLSSignatureChecker,
     BLSOperatorStateRetriever,
-    IIncredibleSquaringTaskManager
+    IAlignedLayerTaskManager
 {
     using BN254 for BN254.G1Point;
 

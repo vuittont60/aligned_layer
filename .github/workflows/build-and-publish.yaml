@@ -1,8 +1,9 @@
+# FIXME(marian): We should change this file when we want to publish aligned layer docker images.
 name: ko-publish-aggregator-and-operator
 
 on:
   push:
-    branches: ['master']
+    branches: ["master"]
   # we can also trigger manually in case needed
   workflow_dispatch:
 
@@ -18,7 +19,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v2
         with:
-          go-version: '1.21.x'
+          go-version: "1.21.x"
       - uses: actions/checkout@v2
 
       - uses: ko-build/setup-ko@v0.6

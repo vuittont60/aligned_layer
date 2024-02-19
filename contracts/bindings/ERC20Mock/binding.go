@@ -26,6 +26,7 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
 // ContractERC20MockMetaData contains all meta data concerning the ContractERC20Mock contract.
@@ -156,11 +157,11 @@ func NewContractERC20MockFilterer(address common.Address, filterer bind.Contract
 
 // bindContractERC20Mock binds a generic wrapper to an already deployed contract.
 func bindContractERC20Mock(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ContractERC20MockABI))
+	parsed, err := ContractERC20MockMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and

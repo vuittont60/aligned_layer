@@ -1,4 +1,4 @@
-module github.com/Layr-Labs/incredible-squaring-avs
+module github.com/yetanotherco/aligned_layer
 
 go 1.21
 

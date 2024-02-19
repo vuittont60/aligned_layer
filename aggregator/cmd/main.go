@@ -9,8 +9,8 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
+	"github.com/yetanotherco/aligned_layer/aggregator"
+	"github.com/yetanotherco/aligned_layer/core/config"
 )
 
 var (

@@ -9,9 +9,9 @@ import (
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 	sdklogging "github.com/Layr-Labs/eigensdk-go/logging"
 
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	"github.com/Layr-Labs/incredible-squaring-avs/metrics"
-	"github.com/Layr-Labs/incredible-squaring-avs/tests"
+	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
+	"github.com/yetanotherco/aligned_layer/metrics"
+	"github.com/yetanotherco/aligned_layer/tests"
 )
 
 const MOCK_OPERATOR_BLS_PRIVATE_KEY = "69"
@@ -47,7 +47,7 @@ func createMockOperator() (*Operator, error) {
 		blsKeypair:         operatorKeypair,
 		metricsReg:         reg,
 		metrics:            noopMetrics,
-		newTaskCreatedChan: make(chan *cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated),
+		newTaskCreatedChan: make(chan *cstaskmanager.ContractAlignedLayerTaskManagerNewTaskCreated),
 		operatorId:         MOCK_OPERATOR_ID,
 	}
 	return operator, nil
