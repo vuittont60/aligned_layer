@@ -9,7 +9,10 @@ import (
 
 	"github.com/urfave/cli"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
+	"github.com/Layr-Labs/eigensdk-go/signer"
+	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
+	"github.com/Layr-Labs/incredible-squaring-avs/common"
+	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
 )
 
@@ -48,46 +51,36 @@ func taskGeneratorMain(ctx *cli.Context) error {
 	}
 	fmt.Println("Config:", string(configJson))
 
+	// avsReader, err := chainio.NewAvsReaderFromConfig(c)
+	// if err != nil {
+	// 	panic("hola")
+	// }
 
-
-	agg, err := aggregator.NewAggregator(config)
+	chainId, err := config.EthHttpClient.ChainID(context.Background())
 	if err != nil {
-		return err
+		panic("Hola")
 	}
 
-	err = agg.Start(context.Background())
+	privateKeySigner, err := signer.NewPrivateKeySigner(config.EcdsaPrivateKey, chainId)
 	if err != nil {
-		return err
+		panic("Hola")
+	}
+	config.Signer = privateKeySigner
+
+	avsWriter, err := chainio.NewAvsWriterFromConfig(config)
+	if err != nil {
+		panic("hola")
 	}
 
-	avsReader, err := chainio.NewAvsReaderFromConfig(c)
-	if err != nil {
-		c.Logger.Error("Cannot create EthReader", "err", err)
-		return nil, err
-	}
-	/*
+	proof := make([]byte, 32)
 
-	chainId, err := c.EthHttpClient.ChainID(context.Background())
+	_, taskIndex, err := avsWriter.SendNewTaskVerifyProof(context.Background(), proof, common.GnarkPlonkBls12_381, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+
 	if err != nil {
-		c.Logger.Error("Cannot get chainId", "err", err)
-		return nil, err
+		panic("Couldn't send the task")
 	}
 
-	privateKeySigner, err := signer.NewPrivateKeySigner(c.EcdsaPrivateKey, chainId)
-	if err != nil {
-		c.Logger.Error("Cannot create signer", "err", err)
-		return nil, err
-	}
-	c.Signer = privateKeySigner
-
-	*/
-	avsWriter, err := chainio.NewAvsWriterFromConfig(c)
-	if err != nil {
-		c.Logger.Errorf("Cannot create EthSubscriber", "err", err)
-		ret
-
-	avsWriter.SendNewTaskVerifyProof(context.Background(), proof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+	fmt.Println("Created a new task with index: ", taskIndex)
 
 	return nil
 }
-

@@ -2,8 +2,6 @@ package aggregator
 
 import (
 	"context"
-	"math/rand"
-	"os"
 	"sync"
 	"time"
 
@@ -159,19 +157,22 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	ticker := time.NewTicker(10 * time.Second)
 	agg.logger.Infof("Aggregator set to send new task every 10 seconds...")
 	defer ticker.Stop()
-	taskNum := int64(0)
-	// ticker doesn't tick immediately, so we send the first task here
-	// see https://github.com/golang/go/issues/17601
+	/*
+		taskNum := int64(0)
+		// ticker doesn't tick immediately, so we send the first task here
+		// see https://github.com/golang/go/issues/17601
 
-	// We are randomizing bytes for bad proofs, all should fail
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	var proof []byte
-	badProof := make([]byte, 32)
-	r.Read(badProof)
-	proof = badProof
+		// We are randomizing bytes for bad proofs, all should fail
 
-	_ = agg.sendNewTask(proof, common.LambdaworksCairo)
-	taskNum++
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			var proof []byte
+			badProof := make([]byte, 32)
+			r.Read(badProof)
+			proof = badProof
+
+			_ = agg.sendNewTask(proof, common.LambdaworksCairo)
+			taskNum++
+	*/
 
 	for {
 		select {
@@ -180,52 +181,56 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 		case blsAggServiceResp := <-agg.blsAggregationService.GetResponseChannel():
 			agg.logger.Info("Received response from blsAggregationService", "blsAggServiceResp", blsAggServiceResp)
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
-		case <-ticker.C:
 
-			taskNum++
+			/*
+				case <-ticker.C:
 
-			// Agreggator is creating the tasks, this should be moved in the future
-			// If taskNum is even, a verify Cairo task is sent
-			// if taskNum is odd, a verify Gnark Plonk task is sent
-			// This should be an additional configuration parameter
+					taskNum++
 
-			if taskNum%2 == 0 {
-				// Randomly creates tasks to verify correct and incorrect cairo proofs
-				if r.Intn(3) != 0 {
-					var err error
-					proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
-					if err != nil {
-						panic("Could not read Cairo proof file")
+					// Agreggator is creating the tasks, this should be moved in the future
+					// If taskNum is even, a verify Cairo task is sent
+					// if taskNum is odd, a verify Gnark Plonk task is sent
+					// This should be an additional configuration parameter
+
+					if taskNum%2 == 0 {
+						// Randomly creates tasks to verify correct and incorrect cairo proofs
+						if r.Intn(3) != 0 {
+							var err error
+							proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
+							if err != nil {
+								panic("Could not read Cairo proof file")
+							}
+						} else {
+							badProof := make([]byte, 32)
+							r.Read(badProof)
+							proof = badProof
+						}
+						err := agg.sendNewTask(proof, common.LambdaworksCairo)
+						if err != nil {
+							// we log the errors inside sendNewTask() so here we just continue to the next task
+							continue
+						}
+					} else {
+						if r.Intn(3) != 0 {
+							var err error
+							proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
+							if err != nil {
+								panic("Could not read PLONK proof file")
+							}
+						} else {
+							badProof := make([]byte, 32)
+							r.Read(badProof)
+							proof = badProof
+						}
+						err := agg.sendNewTask(proof, common.GnarkPlonkBls12_381)
+						if err != nil {
+							// we log the errors inside sendNewTask() so here we just continue to the next task
+							continue
+						}
 					}
-				} else {
-					badProof := make([]byte, 32)
-					r.Read(badProof)
-					proof = badProof
-				}
-				err := agg.sendNewTask(proof, common.LambdaworksCairo)
-				if err != nil {
-					// we log the errors inside sendNewTask() so here we just continue to the next task
-					continue
-				}
-			} else {
-				if r.Intn(3) != 0 {
-					var err error
-					proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
-					if err != nil {
-						panic("Could not read PLONK proof file")
-					}
-				} else {
-					badProof := make([]byte, 32)
-					r.Read(badProof)
-					proof = badProof
-				}
-				err := agg.sendNewTask(proof, common.GnarkPlonkBls12_381)
-				if err != nil {
-					// we log the errors inside sendNewTask() so here we just continue to the next task
-					continue
-				}
-			}
 
+				}
+			*/
 		}
 	}
 }
@@ -299,6 +304,7 @@ func (agg *Aggregator) sendNewTask(proof []byte, verifierId common.VerifierId) e
 	// TODO(samlaf): we use seconds for now, but we should ideally pass a blocknumber to the blsAggregationService
 	// and it should monitor the chain and only expire the task aggregation once the chain has reached that block number.
 	taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
+
 	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, newTask.QuorumNumbers, quorumThresholdPercentages, taskTimeToExpiry)
 	return nil
 }
