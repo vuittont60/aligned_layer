@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -82,8 +81,6 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 	if configFilePath != "" {
 		sdkutils.ReadYamlConfig(configFilePath, &configRaw)
 	}
-
-	fmt.Println("CONFIG RAW: ", configRaw)
 
 	var alignedLayerDeploymentRaw AlignedLayerDeploymentRaw
 	alignedLayerDeploymentFilePath := ctx.GlobalString(AlignedLayerDeploymentFileFlag.Name)

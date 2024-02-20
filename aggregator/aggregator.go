@@ -2,7 +2,6 @@ package aggregator
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -115,8 +114,6 @@ func NewAggregator(c *config.Config) (*Aggregator, error) {
 		c.Logger.Error("Cannot get slasher address", "err", err)
 		return nil, err
 	}
-
-	fmt.Println("ADDRESS: ", c.AVSServiceManagerAddress)
 
 	avsSubscriber, err := chainio.NewAvsSubscriber(c.AVSServiceManagerAddress,
 		slasherAddr, c.EthWsClient, c.Logger,
