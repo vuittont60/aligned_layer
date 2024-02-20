@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/cli/actions"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
 	"github.com/urfave/cli"
+	"github.com/yetanotherco/aligned_layer/cli/actions"
+	"github.com/yetanotherco/aligned_layer/core/config"
 )
 
 func main() {

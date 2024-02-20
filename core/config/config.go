@@ -28,19 +28,19 @@ type Config struct {
 	EigenMetricsIpPortAddress string
 	// we need the url for the eigensdk currently... eventually standardize api so as to
 	// only take an ethclient or an rpcUrl (and build the ethclient at each constructor site)
-	EthRpcUrl                            string
-	EthHttpClient                        eth.EthClient
-	EthWsClient                          eth.EthClient
-	BlsOperatorStateRetrieverAddr        common.Address
-	IncredibleSquaringServiceManagerAddr common.Address
-	BlsPublicKeyCompendiumAddress        common.Address
-	SlasherAddr                          common.Address
-	AggregatorServerIpPortAddr           string
-	RegisterOperatorOnStartup            bool
-	Signer                               signer.Signer
-	OperatorAddress                      common.Address
-	AVSServiceManagerAddress             common.Address
-	EnableMetrics                        bool
+	EthRpcUrl                      string
+	EthHttpClient                  eth.EthClient
+	EthWsClient                    eth.EthClient
+	BlsOperatorStateRetrieverAddr  common.Address
+	AlignedLayerServiceManagerAddr common.Address
+	BlsPublicKeyCompendiumAddress  common.Address
+	SlasherAddr                    common.Address
+	AggregatorServerIpPortAddr     string
+	RegisterOperatorOnStartup      bool
+	Signer                         signer.Signer
+	OperatorAddress                common.Address
+	AVSServiceManagerAddress       common.Address
+	EnableMetrics                  bool
 }
 
 // These are read from ConfigFileFlag
@@ -55,12 +55,12 @@ type ConfigRaw struct {
 	EnableMetrics              bool                `yaml:"enable_metrics"`
 }
 
-// These are read from CredibleSquaringDeploymentFileFlag
-type CredibleSquaringDeploymentRaw struct {
-	Addresses CredibleSquaringContractsRaw `json:"addresses"`
+// These are read from AlignedLayerDeploymentFileFlag
+type AlignedLayerDeploymentRaw struct {
+	Addresses AlignedLayerContractsRaw `json:"addresses"`
 }
-type CredibleSquaringContractsRaw struct {
-	IncredibleSquaringServiceManagerAddr string `json:"credibleSquaringServiceManager"`
+type AlignedLayerContractsRaw struct {
+	AlignedLayerServiceManagerAddr string `json:"alignedLayerServiceManager"`
 }
 
 // BlsOperatorStateRetriever and BlsPublicKeyCompendium are deployed separately, since they are
@@ -72,7 +72,7 @@ type SharedAvsContractsRaw struct {
 	BlsOperatorStateRetrieverAddr string `json:"blsOperatorStateRetriever"`
 }
 
-// NewConfig parses config file to read from from flags or environment variables
+// NewConfig parses config file to read from flags or environment variables
 // Note: This config is shared by challenger and aggregator and so we put in the core.
 // Operator has a different config and is meant to be used by the operator CLI.
 func NewConfig(ctx *cli.Context) (*Config, error) {
@@ -85,12 +85,12 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 
 	fmt.Println("CONFIG RAW: ", configRaw)
 
-	var credibleSquaringDeploymentRaw CredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
+	var credibleSquaringDeploymentRaw AlignedLayerDeploymentRaw
+	credibleSquaringDeploymentFilePath := ctx.GlobalString(AlignedLayerDeploymentFileFlag.Name)
 	if _, err := os.Stat(credibleSquaringDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
 		panic("Path " + credibleSquaringDeploymentFilePath + " does not exist")
 	}
-	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
+	sdkutils.ReadJsonConfig(alignedLayerDeploymentFilePath, &alignedLayerDeploymentRaw)
 
 	var sharedAvsContractsDeploymentRaw SharedAvsContractsRaw
 	sharedAvsContractsDeploymentFilePath := ctx.GlobalString(SharedAvsContractsDeploymentFileFlag.Name)
@@ -145,21 +145,21 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 	}
 
 	config := &Config{
-		EcdsaPrivateKey:                      ecdsaPrivateKey,
-		Logger:                               logger,
-		EthRpcUrl:                            configRaw.EthRpcUrl,
-		EthHttpClient:                        ethRpcClient,
-		EthWsClient:                          ethWsClient,
-		BlsOperatorStateRetrieverAddr:        common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		IncredibleSquaringServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.IncredibleSquaringServiceManagerAddr),
-		SlasherAddr:                          common.HexToAddress(""),
-		AggregatorServerIpPortAddr:           configRaw.AggregatorServerIpPortAddr,
-		RegisterOperatorOnStartup:            configRaw.RegisterOperatorOnStartup,
-		Signer:                               privateKeySigner,
-		OperatorAddress:                      operatorAddr,
-		BlsPublicKeyCompendiumAddress:        common.HexToAddress(configRaw.BLSPubkeyCompendiumAddr),
-		AVSServiceManagerAddress:             common.HexToAddress(configRaw.AvsServiceManagerAddress),
-		EnableMetrics:                        configRaw.EnableMetrics,
+		EcdsaPrivateKey:                ecdsaPrivateKey,
+		Logger:                         logger,
+		EthRpcUrl:                      configRaw.EthRpcUrl,
+		EthHttpClient:                  ethRpcClient,
+		EthWsClient:                    ethWsClient,
+		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		SlasherAddr:                    common.HexToAddress(""),
+		AggregatorServerIpPortAddr:     configRaw.AggregatorServerIpPortAddr,
+		RegisterOperatorOnStartup:      configRaw.RegisterOperatorOnStartup,
+		Signer:                         privateKeySigner,
+		OperatorAddress:                operatorAddr,
+		BlsPublicKeyCompendiumAddress:  common.HexToAddress(configRaw.BLSPubkeyCompendiumAddr),
+		AVSServiceManagerAddress:       common.HexToAddress(configRaw.AvsServiceManagerAddress),
+		EnableMetrics:                  configRaw.EnableMetrics,
 	}
 	config.validate()
 	return config, nil
@@ -170,8 +170,8 @@ func (c *Config) validate() {
 	if c.BlsOperatorStateRetrieverAddr == common.HexToAddress("") {
 		panic("Config: BLSOperatorStateRetrieverAddr is required")
 	}
-	if c.IncredibleSquaringServiceManagerAddr == common.HexToAddress("") {
-		panic("Config: IncredibleSquaringServiceManagerAddr is required")
+	if c.AlignedLayerServiceManagerAddr == common.HexToAddress("") {
+		panic("Config: AlignedLayerServiceManagerAddr is required")
 	}
 }
 
@@ -182,8 +182,8 @@ var (
 		Required: true,
 		Usage:    "Load configuration from `FILE`",
 	}
-	CredibleSquaringDeploymentFileFlag = cli.StringFlag{
-		Name:     "credible-squaring-deployment",
+	AlignedLayerDeploymentFileFlag = cli.StringFlag{
+		Name:     "aligned-layer-deployment",
 		Required: true,
 		Usage:    "Load credible squaring contract addresses from `FILE`",
 	}
@@ -203,7 +203,7 @@ var (
 
 var requiredFlags = []cli.Flag{
 	ConfigFileFlag,
-	CredibleSquaringDeploymentFileFlag,
+	AlignedLayerDeploymentFileFlag,
 	SharedAvsContractsDeploymentFileFlag,
 	EcdsaPrivateKeyFlag,
 }

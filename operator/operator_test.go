@@ -15,11 +15,11 @@ import (
 
 	"github.com/Layr-Labs/eigensdk-go/crypto/bls"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator"
-	aggtypes "github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	chainiomocks "github.com/Layr-Labs/incredible-squaring-avs/core/chainio/mocks"
-	operatormocks "github.com/Layr-Labs/incredible-squaring-avs/operator/mocks"
+	"github.com/yetanotherco/aligned_layer/aggregator"
+	aggtypes "github.com/yetanotherco/aligned_layer/aggregator/types"
+	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
+	chainiomocks "github.com/yetanotherco/aligned_layer/core/chainio/mocks"
+	operatormocks "github.com/yetanotherco/aligned_layer/operator/mocks"
 )
 
 func TestOperator(t *testing.T) {
@@ -35,9 +35,9 @@ func TestOperator(t *testing.T) {
 		bad_proof := make([]byte, 32)
 		r.Read(bad_proof)
 
-		newTaskCreatedLog := &cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated{
+		newTaskCreatedLog := &cstaskmanager.ContractAlignedLayerTaskManagerNewTaskCreated{
 			TaskIndex: taskIndex,
-			Task: cstaskmanager.IIncredibleSquaringTaskManagerTask{
+			Task: cstaskmanager.IAlignedLayerTaskManagerTask{
 				Proof:                     bad_proof,
 				QuorumNumbers:             aggtypes.QUORUM_NUMBERS,
 				QuorumThresholdPercentage: aggtypes.QUORUM_THRESHOLD_NUMERATOR,
@@ -48,7 +48,7 @@ func TestOperator(t *testing.T) {
 
 		// This should call the verifier
 		result := false
-		want := &cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+		want := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
 			ReferenceTaskIndex: taskIndex,
 			ProofIsCorrect:     result,
 		}
@@ -67,9 +67,9 @@ func TestOperator(t *testing.T) {
 		r.Read(badProof)
 
 		// new task event
-		newTaskCreatedEvent := &cstaskmanager.ContractIncredibleSquaringTaskManagerNewTaskCreated{
+		newTaskCreatedEvent := &cstaskmanager.ContractAlignedLayerTaskManagerNewTaskCreated{
 			TaskIndex: taskIndex,
-			Task: cstaskmanager.IIncredibleSquaringTaskManagerTask{
+			Task: cstaskmanager.IAlignedLayerTaskManagerTask{
 				Proof:                     badProof,
 				TaskCreatedBlock:          1000,
 				QuorumNumbers:             aggtypes.QUORUM_NUMBERS,
@@ -84,7 +84,7 @@ func TestOperator(t *testing.T) {
 		assert.True(t, ok)
 
 		signedTaskResponse := &aggregator.SignedTaskResponse{
-			TaskResponse: cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse{
+			TaskResponse: cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
 				ReferenceTaskIndex: taskIndex,
 				ProofIsCorrect:     verificationResult,
 			},

@@ -19,11 +19,11 @@ import (
 	blsaggservmock "github.com/Layr-Labs/eigensdk-go/services/mocks/blsagg"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/mocks"
-	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/common"
-	cstaskmanager "github.com/Layr-Labs/incredible-squaring-avs/contracts/bindings/IncredibleSquaringTaskManager"
-	chainiomocks "github.com/Layr-Labs/incredible-squaring-avs/core/chainio/mocks"
+	"github.com/yetanotherco/aligned_layer/aggregator/mocks"
+	"github.com/yetanotherco/aligned_layer/aggregator/types"
+	"github.com/yetanotherco/aligned_layer/common"
+	cstaskmanager "github.com/yetanotherco/aligned_layer/contracts/bindings/AlignedLayerTaskManager"
+	chainiomocks "github.com/yetanotherco/aligned_layer/core/chainio/mocks"
 )
 
 var MOCK_OPERATOR_ID = [32]byte{207, 73, 226, 221, 104, 100, 123, 41, 192, 3, 9, 119, 90, 83, 233, 159, 231, 151, 245, 96, 150, 48, 144, 27, 102, 253, 39, 101, 1, 26, 135, 173}
@@ -66,9 +66,10 @@ func TestSendNewTask(t *testing.T) {
 	fmt.Println(time.Now().UnixNano())
 	badProof := make([]byte, 32)
 	r.Read(badProof)
+	verifierId := common.LambdaworksCairo
 
 	mockAvsWriterer.EXPECT().SendNewTaskVerifyProof(
-		context.Background(), badProof, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
+		context.Background(), badProof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS,
 	).Return(mocks.MockSendNewTaskVerifyProofCall(BLOCK_NUMBER, TASK_INDEX, badProof))
 
 	// 100 blocks, each takes 12 seconds. We hardcode for now since aggregator also hardcodes this value
@@ -93,8 +94,8 @@ func createMockAggregator(
 		logger:                logger,
 		avsWriter:             mockAvsWriter,
 		blsAggregationService: mockBlsAggregationService,
-		tasks:                 make(map[types.TaskIndex]cstaskmanager.IIncredibleSquaringTaskManagerTask),
-		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IIncredibleSquaringTaskManagerTaskResponse),
+		tasks:                 make(map[types.TaskIndex]cstaskmanager.IAlignedLayerTaskManagerTask),
+		taskResponses:         make(map[types.TaskIndex]map[sdktypes.TaskResponseDigest]cstaskmanager.IAlignedLayerTaskManagerTaskResponse),
 	}
 	return aggregator, mockAvsWriter, mockBlsAggregationService, nil
 }

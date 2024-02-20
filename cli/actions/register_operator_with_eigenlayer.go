@@ -2,13 +2,14 @@ package actions
 
 import (
 	"encoding/json"
-	"github.com/urfave/cli"
 	"log"
 
+	"github.com/urfave/cli"
+
 	sdkutils "github.com/Layr-Labs/eigensdk-go/utils"
-	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
-	"github.com/Layr-Labs/incredible-squaring-avs/operator"
-	"github.com/Layr-Labs/incredible-squaring-avs/types"
+	"github.com/yetanotherco/aligned_layer/core/config"
+	"github.com/yetanotherco/aligned_layer/operator"
+	"github.com/yetanotherco/aligned_layer/types"
 )
 
 func RegisterOperatorWithEigenlayer(ctx *cli.Context) error {
