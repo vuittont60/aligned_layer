@@ -43,6 +43,12 @@ make cli-setup-operator
 make start-operator
 ```
 
+Lastly, start the task generator:
+
+```bash
+make start-task-generator
+```
+
 ## Workflow
 
 To re compile contracts in case of changes use:
