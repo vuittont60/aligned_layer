@@ -2,7 +2,6 @@ package aggregator
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -17,7 +16,6 @@ import (
 	pubkeycompserv "github.com/Layr-Labs/eigensdk-go/services/pubkeycompendium"
 	sdktypes "github.com/Layr-Labs/eigensdk-go/types"
 	"github.com/Layr-Labs/incredible-squaring-avs/aggregator/types"
-	"github.com/Layr-Labs/incredible-squaring-avs/common"
 	"github.com/Layr-Labs/incredible-squaring-avs/core"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/chainio"
 	"github.com/Layr-Labs/incredible-squaring-avs/core/config"
@@ -168,27 +166,6 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 	agg.logger.Infof("Starting aggregator rpc server.")
 	go agg.startServer(ctx)
 
-	// TODO(soubhik): refactor task generation/sending into a separate function that we can run as goroutine
-	ticker := time.NewTicker(10 * time.Second)
-	agg.logger.Infof("Aggregator set to send new task every 10 seconds...")
-	defer ticker.Stop()
-	/*
-		taskNum := int64(0)
-		// ticker doesn't tick immediately, so we send the first task here
-		// see https://github.com/golang/go/issues/17601
-
-		// We are randomizing bytes for bad proofs, all should fail
-
-			r := rand.New(rand.NewSource(time.Now().UnixNano()))
-			var proof []byte
-			badProof := make([]byte, 32)
-			r.Read(badProof)
-			proof = badProof
-
-			_ = agg.sendNewTask(proof, common.LambdaworksCairo)
-			taskNum++
-	*/
-
 	sub := agg.avsSubscriber.SubscribeToNewTasks(agg.newTaskCreatedChan)
 
 	for {
@@ -200,60 +177,29 @@ func (agg *Aggregator) Start(ctx context.Context) error {
 			agg.sendAggregatedResponseToContract(blsAggServiceResp)
 
 		case err := <-sub.Err():
-			fmt.Println("FATARL ERROR", err)
+			agg.logger.Errorf("AVS contract subscription error")
+			return err
 
 		case event := <-agg.newTaskCreatedChan:
-			fmt.Println("EVENT: ", event)
+			agg.logger.Infof("Received new task event with index %d", event.TaskIndex)
 
-			/*
-				case <-ticker.C:
+			newTask := event.Task
+			taskIndex := event.TaskIndex
 
-					taskNum++
+			agg.tasksMu.Lock()
+			agg.tasks[taskIndex] = newTask
+			agg.tasksMu.Unlock()
 
-					// Agreggator is creating the tasks, this should be moved in the future
-					// If taskNum is even, a verify Cairo task is sent
-					// if taskNum is odd, a verify Gnark Plonk task is sent
-					// This should be an additional configuration parameter
+			quorumThresholdPercentages := make([]uint32, len(newTask.QuorumNumbers))
+			for i, _ := range newTask.QuorumNumbers {
+				quorumThresholdPercentages[i] = newTask.QuorumThresholdPercentage
+			}
+			// TODO(samlaf): we use seconds for now, but we should ideally pass a blocknumber to the blsAggregationService
+			// and it should monitor the chain and only expire the task aggregation once the chain has reached that block number.
+			taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
 
-					if taskNum%2 == 0 {
-						// Randomly creates tasks to verify correct and incorrect cairo proofs
-						if r.Intn(3) != 0 {
-							var err error
-							proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
-							if err != nil {
-								panic("Could not read Cairo proof file")
-							}
-						} else {
-							badProof := make([]byte, 32)
-							r.Read(badProof)
-							proof = badProof
-						}
-						err := agg.sendNewTask(proof, common.LambdaworksCairo)
-						if err != nil {
-							// we log the errors inside sendNewTask() so here we just continue to the next task
-							continue
-						}
-					} else {
-						if r.Intn(3) != 0 {
-							var err error
-							proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
-							if err != nil {
-								panic("Could not read PLONK proof file")
-							}
-						} else {
-							badProof := make([]byte, 32)
-							r.Read(badProof)
-							proof = badProof
-						}
-						err := agg.sendNewTask(proof, common.GnarkPlonkBls12_381)
-						if err != nil {
-							// we log the errors inside sendNewTask() so here we just continue to the next task
-							continue
-						}
-					}
+			agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, newTask.QuorumNumbers, quorumThresholdPercentages, taskTimeToExpiry)
 
-				}
-			*/
 		}
 	}
 }
@@ -297,37 +243,4 @@ func (agg *Aggregator) sendAggregatedResponseToContract(blsAggServiceResp blsagg
 	if err != nil {
 		agg.logger.Error("Aggregator failed to respond to task", "err", err)
 	}
-}
-
-// sendNewTask sends a new task to the task manager contract, and updates the Task dict struct
-// with the information of operators opted into quorum 0 at the block of task creation.
-func (agg *Aggregator) sendNewTask(proof []byte, verifierId common.VerifierId) error {
-
-	agg.logger.Info("Aggregator sending new task")
-	if verifierId == common.GnarkPlonkBls12_381 {
-		agg.logger.Info("- Verify gnark proof")
-	} else {
-		agg.logger.Info("- Verify cairo proof")
-	}
-
-	newTask, taskIndex, err := agg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
-	if err != nil {
-		agg.logger.Error("Aggregator failed to send proof", "err", err)
-		return err
-	}
-
-	agg.tasksMu.Lock()
-	agg.tasks[taskIndex] = newTask
-	agg.tasksMu.Unlock()
-
-	quorumThresholdPercentages := make([]uint32, len(newTask.QuorumNumbers))
-	for i, _ := range newTask.QuorumNumbers {
-		quorumThresholdPercentages[i] = newTask.QuorumThresholdPercentage
-	}
-	// TODO(samlaf): we use seconds for now, but we should ideally pass a blocknumber to the blsAggregationService
-	// and it should monitor the chain and only expire the task aggregation once the chain has reached that block number.
-	taskTimeToExpiry := taskChallengeWindowBlock * blockTimeSeconds
-
-	agg.blsAggregationService.InitializeNewTask(taskIndex, newTask.TaskCreatedBlock, newTask.QuorumNumbers, quorumThresholdPercentages, taskTimeToExpiry)
-	return nil
 }
