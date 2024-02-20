@@ -161,7 +161,6 @@ func TestIntegration(t *testing.T) {
 	}
 	go agg.Start(ctx)
 	log.Println("Started aggregator")
-	time.Sleep(20 * time.Second)
 
 	/* start task generator */
 	log.Println("starting task generator for integration tests")
@@ -171,6 +170,7 @@ func TestIntegration(t *testing.T) {
 	}
 	go taskGen.Start(ctx)
 	log.Println("Started task generator. Sleeping 20 seconds to give operator time to answer task 1...")
+	time.Sleep(20 * time.Second)
 
 	// get avsRegistry client to interact with the chain
 	avsReader, err := chainio.NewAvsReaderFromConfig(config)
