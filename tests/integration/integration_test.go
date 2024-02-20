@@ -52,9 +52,9 @@ func TestIntegration(t *testing.T) {
 	aggConfigRaw.EthRpcUrl = "http://" + anvilEndpoint
 	aggConfigRaw.EthWsUrl = "ws://" + anvilEndpoint
 
-	var credibleSquaringDeploymentRaw config.CredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := rootDir + "/contracts/script/output/31337/aligned_layer_avs_deployment_output.json"
-	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
+	var alignedLayerDeploymentRaw config.AlignedLayerDeploymentRaw
+	alignedLayerDeploymentFilePath := rootDir + "/contracts/script/output/31337/aligned_layer_avs_deployment_output.json"
+	sdkutils.ReadJsonConfig(alignedLayerDeploymentFilePath, &alignedLayerDeploymentRaw)
 
 	var sharedAvsContractsDeploymentRaw config.SharedAvsContractsRaw
 	sharedAvsContractsDeploymentFilePath := rootDir + "/contracts/script/output/31337/shared_avs_contracts_deployment_output.json"
@@ -104,12 +104,13 @@ func TestIntegration(t *testing.T) {
 		EthHttpClient:                  ethRpcClient,
 		EthWsClient:                    ethWsClient,
 		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(alignedLayerDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
 		SlasherAddr:                    common.HexToAddress(""),
 		AggregatorServerIpPortAddr:     aggConfigRaw.AggregatorServerIpPortAddr,
 		RegisterOperatorOnStartup:      aggConfigRaw.RegisterOperatorOnStartup,
 		Signer:                         privateKeySigner,
 		OperatorAddress:                operatorAddr,
+		AVSServiceManagerAddress:       common.HexToAddress(aggConfigRaw.AvsServiceManagerAddress),
 		BlsPublicKeyCompendiumAddress:  common.HexToAddress(aggConfigRaw.BLSPubkeyCompendiumAddr),
 	}
 
