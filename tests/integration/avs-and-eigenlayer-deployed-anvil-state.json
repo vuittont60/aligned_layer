@@ -275,7 +275,7 @@
     },
     "0xa0ee7a142d267c1f36714e4a8f75612f20a79720": {
       "nonce": 1,
-      "balance": "0x21d8f19672859b319a0",
+      "balance": "0x21d8f19689f1da51b70",
       "code": "0x",
       "storage": {}
     },
@@ -400,7 +400,7 @@
     },
     "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266": {
       "nonce": 49,
-      "balance": "0x21e175847c4493899f5",
+      "balance": "0x21e17476c7121269808",
       "code": "0x",
       "storage": {}
     },

@@ -85,10 +85,10 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 
 	fmt.Println("CONFIG RAW: ", configRaw)
 
-	var credibleSquaringDeploymentRaw AlignedLayerDeploymentRaw
-	credibleSquaringDeploymentFilePath := ctx.GlobalString(AlignedLayerDeploymentFileFlag.Name)
-	if _, err := os.Stat(credibleSquaringDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
-		panic("Path " + credibleSquaringDeploymentFilePath + " does not exist")
+	var alignedLayerDeploymentRaw AlignedLayerDeploymentRaw
+	alignedLayerDeploymentFilePath := ctx.GlobalString(AlignedLayerDeploymentFileFlag.Name)
+	if _, err := os.Stat(alignedLayerDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
+		panic("Path " + alignedLayerDeploymentFilePath + " does not exist")
 	}
 	sdkutils.ReadJsonConfig(alignedLayerDeploymentFilePath, &alignedLayerDeploymentRaw)
 
@@ -151,7 +151,7 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		EthHttpClient:                  ethRpcClient,
 		EthWsClient:                    ethWsClient,
 		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(alignedLayerDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
 		SlasherAddr:                    common.HexToAddress(""),
 		AggregatorServerIpPortAddr:     configRaw.AggregatorServerIpPortAddr,
 		RegisterOperatorOnStartup:      configRaw.RegisterOperatorOnStartup,
