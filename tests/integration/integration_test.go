@@ -21,6 +21,7 @@ import (
 	"github.com/yetanotherco/aligned_layer/core/chainio"
 	"github.com/yetanotherco/aligned_layer/core/config"
 	"github.com/yetanotherco/aligned_layer/operator"
+	"github.com/yetanotherco/aligned_layer/task_generator"
 	"github.com/yetanotherco/aligned_layer/types"
 )
 
@@ -159,8 +160,17 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("Failed to create aggregator: %s", err.Error())
 	}
 	go agg.Start(ctx)
-	log.Println("Started aggregator. Sleeping 20 seconds to give operator time to answer task 1...")
+	log.Println("Started aggregator")
 	time.Sleep(20 * time.Second)
+
+	/* start task generator */
+	log.Println("starting task generator for integration tests")
+	taskGen, err := task_generator.NewTaskGenerator(config)
+	if err != nil {
+		t.Fatalf("Failed to create task generator: %s", err.Error())
+	}
+	go taskGen.Start(ctx)
+	log.Println("Started task generator. Sleeping 20 seconds to give operator time to answer task 1...")
 
 	// get avsRegistry client to interact with the chain
 	avsReader, err := chainio.NewAvsReaderFromConfig(config)
