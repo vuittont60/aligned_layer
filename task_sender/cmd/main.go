@@ -104,6 +104,9 @@ func parseVerifierId(verifierIdStr string) (common.VerifierId, error) {
 	return common.LambdaworksCairo, errors.New("could not parse verifier ID")
 }
 
+// This function is almost identical to NewConfig, but with hardcoded values.
+// Its only purpose is to make the usage of the task sender CLI easier, since we don't really
+// need to setup special configurations for the moment.
 func dummyConfig() (*config.Config, error) {
 	var configRaw config.ConfigRaw
 	configFilePath := "config-files/aggregator.yaml"
