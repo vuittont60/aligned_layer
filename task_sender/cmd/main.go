@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/urfave/cli"
 
+	"github.com/yetanotherco/aligned_layer/common"
 	"github.com/yetanotherco/aligned_layer/core/config"
 	"github.com/yetanotherco/aligned_layer/task_generator"
 )
@@ -68,10 +70,33 @@ func taskSenderMain(ctx *cli.Context) error {
 		return err
 	}
 
-	err = taskGen.SendNewTask(proof, VerifierId)
+	proofFilePath := ctx.GlobalString(ProofFileFlag.Name)
+	proof, err := os.ReadFile(proofFilePath)
+	if err != nil {
+		panic("Could not read proof file")
+	}
+
+	verifierId, err := parseVerifierId(ctx.GlobalString((VerifierIdFlag.Name)))
+	if err != nil {
+		return err
+	}
+
+	err = taskGen.SendNewTask(proof, verifierId)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func parseVerifierId(verifierIdStr string) (common.VerifierId, error) {
+	if verifierIdStr == "cairo" {
+		return common.LambdaworksCairo, nil
+	} else if verifierIdStr == "plonk" {
+		return common.GnarkPlonkBls12_381, nil
+	}
+
+	// returning this just to return something, the error should be handled
+	// by the caller.
+	return common.LambdaworksCairo, errors.New("could not parse verifier ID")
 }
