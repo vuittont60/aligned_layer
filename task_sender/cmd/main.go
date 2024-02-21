@@ -89,6 +89,8 @@ func taskSenderMain(ctx *cli.Context) error {
 		return err
 	}
 
+	log.Println("Task successfully sent\n")
+
 	return nil
 }
 
