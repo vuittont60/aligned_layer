@@ -38,6 +38,8 @@ type Config struct {
 	RegisterOperatorOnStartup      bool
 	Signer                         signer.Signer
 	OperatorAddress                common.Address
+	AVSServiceManagerAddress       common.Address
+	EnableMetrics                  bool
 }
 
 // These are read from ConfigFileFlag
@@ -48,13 +50,15 @@ type ConfigRaw struct {
 	AggregatorServerIpPortAddr string              `yaml:"aggregator_server_ip_port_address"`
 	RegisterOperatorOnStartup  bool                `yaml:"register_operator_on_startup"`
 	BLSPubkeyCompendiumAddr    string              `yaml:"bls_public_key_compendium_address"`
+	AvsServiceManagerAddress   string              `yaml:"avs_service_manager_address"`
+	EnableMetrics              bool                `yaml:"enable_metrics"`
 }
 
-// These are read from CredibleSquaringDeploymentFileFlag
-type CredibleSquaringDeploymentRaw struct {
-	Addresses CredibleSquaringContractsRaw `json:"addresses"`
+// These are read from AlignedLayerDeploymentFileFlag
+type AlignedLayerDeploymentRaw struct {
+	Addresses AlignedLayerContractsRaw `json:"addresses"`
 }
-type CredibleSquaringContractsRaw struct {
+type AlignedLayerContractsRaw struct {
 	AlignedLayerServiceManagerAddr string `json:"alignedLayerServiceManager"`
 }
 
@@ -78,8 +82,8 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		sdkutils.ReadYamlConfig(configFilePath, &configRaw)
 	}
 
-	var alignedLayerDeploymentRaw CredibleSquaringDeploymentRaw
-	alignedLayerDeploymentFilePath := ctx.GlobalString(CredibleSquaringDeploymentFileFlag.Name)
+	var alignedLayerDeploymentRaw AlignedLayerDeploymentRaw
+	alignedLayerDeploymentFilePath := ctx.GlobalString(AlignedLayerDeploymentFileFlag.Name)
 	if _, err := os.Stat(alignedLayerDeploymentFilePath); errors.Is(err, os.ErrNotExist) {
 		panic("Path " + alignedLayerDeploymentFilePath + " does not exist")
 	}
@@ -151,6 +155,8 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		Signer:                         privateKeySigner,
 		OperatorAddress:                operatorAddr,
 		BlsPublicKeyCompendiumAddress:  common.HexToAddress(configRaw.BLSPubkeyCompendiumAddr),
+		AVSServiceManagerAddress:       common.HexToAddress(configRaw.AvsServiceManagerAddress),
+		EnableMetrics:                  configRaw.EnableMetrics,
 	}
 	config.validate()
 	return config, nil
@@ -173,7 +179,7 @@ var (
 		Required: true,
 		Usage:    "Load configuration from `FILE`",
 	}
-	CredibleSquaringDeploymentFileFlag = cli.StringFlag{
+	AlignedLayerDeploymentFileFlag = cli.StringFlag{
 		Name:     "aligned-layer-deployment",
 		Required: true,
 		Usage:    "Load credible squaring contract addresses from `FILE`",
@@ -194,7 +200,7 @@ var (
 
 var requiredFlags = []cli.Flag{
 	ConfigFileFlag,
-	CredibleSquaringDeploymentFileFlag,
+	AlignedLayerDeploymentFileFlag,
 	SharedAvsContractsDeploymentFileFlag,
 	EcdsaPrivateKeyFlag,
 }

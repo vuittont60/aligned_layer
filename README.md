@@ -36,11 +36,17 @@ Start the aggregator:
 make start-aggregator
 ```
 
-Register the operator with eigenlayer and incredible-squaring, and then start the process:
+Register the operator with eigenlayer and aligned layer, then start the process:
 
 ```bash
 make cli-setup-operator
 make start-operator
+```
+
+Lastly, start the task generator:
+
+```bash
+make start-task-generator
 ```
 
 ## Workflow

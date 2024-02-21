@@ -21,6 +21,7 @@ import (
 	"github.com/yetanotherco/aligned_layer/core/chainio"
 	"github.com/yetanotherco/aligned_layer/core/config"
 	"github.com/yetanotherco/aligned_layer/operator"
+	"github.com/yetanotherco/aligned_layer/task_generator"
 	"github.com/yetanotherco/aligned_layer/types"
 )
 
@@ -52,9 +53,9 @@ func TestIntegration(t *testing.T) {
 	aggConfigRaw.EthRpcUrl = "http://" + anvilEndpoint
 	aggConfigRaw.EthWsUrl = "ws://" + anvilEndpoint
 
-	var credibleSquaringDeploymentRaw config.CredibleSquaringDeploymentRaw
-	credibleSquaringDeploymentFilePath := rootDir + "/contracts/script/output/31337/aligned_layer_avs_deployment_output.json"
-	sdkutils.ReadJsonConfig(credibleSquaringDeploymentFilePath, &credibleSquaringDeploymentRaw)
+	var alignedLayerDeploymentRaw config.AlignedLayerDeploymentRaw
+	alignedLayerDeploymentFilePath := rootDir + "/contracts/script/output/31337/aligned_layer_avs_deployment_output.json"
+	sdkutils.ReadJsonConfig(alignedLayerDeploymentFilePath, &alignedLayerDeploymentRaw)
 
 	var sharedAvsContractsDeploymentRaw config.SharedAvsContractsRaw
 	sharedAvsContractsDeploymentFilePath := rootDir + "/contracts/script/output/31337/shared_avs_contracts_deployment_output.json"
@@ -104,12 +105,13 @@ func TestIntegration(t *testing.T) {
 		EthHttpClient:                  ethRpcClient,
 		EthWsClient:                    ethWsClient,
 		BlsOperatorStateRetrieverAddr:  common.HexToAddress(sharedAvsContractsDeploymentRaw.BlsOperatorStateRetrieverAddr),
-		AlignedLayerServiceManagerAddr: common.HexToAddress(credibleSquaringDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
+		AlignedLayerServiceManagerAddr: common.HexToAddress(alignedLayerDeploymentRaw.Addresses.AlignedLayerServiceManagerAddr),
 		SlasherAddr:                    common.HexToAddress(""),
 		AggregatorServerIpPortAddr:     aggConfigRaw.AggregatorServerIpPortAddr,
 		RegisterOperatorOnStartup:      aggConfigRaw.RegisterOperatorOnStartup,
 		Signer:                         privateKeySigner,
 		OperatorAddress:                operatorAddr,
+		AVSServiceManagerAddress:       common.HexToAddress(aggConfigRaw.AvsServiceManagerAddress),
 		BlsPublicKeyCompendiumAddress:  common.HexToAddress(aggConfigRaw.BLSPubkeyCompendiumAddr),
 	}
 
@@ -158,7 +160,16 @@ func TestIntegration(t *testing.T) {
 		t.Fatalf("Failed to create aggregator: %s", err.Error())
 	}
 	go agg.Start(ctx)
-	log.Println("Started aggregator. Sleeping 20 seconds to give operator time to answer task 1...")
+	log.Println("Started aggregator")
+
+	/* start task generator */
+	log.Println("starting task generator for integration tests")
+	taskGen, err := task_generator.NewTaskGenerator(config)
+	if err != nil {
+		t.Fatalf("Failed to create task generator: %s", err.Error())
+	}
+	go taskGen.Start(ctx)
+	log.Println("Started task generator. Sleeping 20 seconds to give operator time to answer task 1...")
 	time.Sleep(20 * time.Second)
 
 	// get avsRegistry client to interact with the chain

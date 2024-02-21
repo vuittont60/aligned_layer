@@ -117,3 +117,11 @@ clean:
 	@rm -f integration_tests
 	@cd operator/cairo_platinum/lib && cargo clean 2> /dev/null
 	@go clean ./...
+
+
+start-task-generator: ## 
+	go run task_generator/cmd/main.go --config config-files/aggregator.yaml \
+		--aligned-layer-deployment ${DEPLOYMENT_FILES_DIR}/aligned_layer_avs_deployment_output.json \
+		--shared-avs-contracts-deployment ${DEPLOYMENT_FILES_DIR}/shared_avs_contracts_deployment_output.json \
+		--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
+		2>&1 | zap-pretty
