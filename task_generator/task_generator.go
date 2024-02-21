@@ -126,7 +126,7 @@ func (tg *TaskGenerator) SendNewTask(proof []byte, verifierId common.VerifierId)
 		return err
 	}
 
-	tg.logger.Infof("Generated new task with index %d", taskIndex)
+	tg.logger.Infof("Generated new task with index %d \n", taskIndex)
 
 	return nil
 }

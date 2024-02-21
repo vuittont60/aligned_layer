@@ -35,7 +35,7 @@ func main() {
 }
 
 func taskGeneratorMain(ctx *cli.Context) error {
-	log.Println("Initializing Task Generator")
+	log.Println("Initializing Task Generator...")
 	config, err := config.NewConfig(ctx)
 	if err != nil {
 		return err

@@ -158,11 +158,11 @@ func NewConfig(ctx *cli.Context) (*Config, error) {
 		AVSServiceManagerAddress:       common.HexToAddress(configRaw.AvsServiceManagerAddress),
 		EnableMetrics:                  configRaw.EnableMetrics,
 	}
-	config.validate()
+	config.Validate()
 	return config, nil
 }
 
-func (c *Config) validate() {
+func (c *Config) Validate() {
 	// TODO: make sure every pointer is non-nil
 	if c.BlsOperatorStateRetrieverAddr == common.HexToAddress("") {
 		panic("Config: BLSOperatorStateRetrieverAddr is required")
