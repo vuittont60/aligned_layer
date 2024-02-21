@@ -62,7 +62,7 @@ func main() {
 }
 
 func taskSenderMain(ctx *cli.Context) error {
-	log.Println("Initializing Task Sender")
+	log.Println("Initializing Task Sender...")
 	config, err := dummyConfig()
 	if err != nil {
 		return err
