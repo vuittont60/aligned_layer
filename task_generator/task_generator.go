@@ -63,7 +63,7 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 	r.Read(badProof)
 	proof = badProof
 
-	_ = tg.sendNewTask(proof, common.LambdaworksCairo)
+	_ = tg.SendNewTask(proof, common.LambdaworksCairo)
 	taskNum++
 
 	for {
@@ -90,7 +90,7 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 					r.Read(badProof)
 					proof = badProof
 				}
-				err := tg.sendNewTask(proof, common.LambdaworksCairo)
+				err := tg.SendNewTask(proof, common.LambdaworksCairo)
 				if err != nil {
 					// we log the errors inside sendNewTask() so here we just continue to the next task
 					continue
@@ -107,7 +107,7 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 					r.Read(badProof)
 					proof = badProof
 				}
-				err := tg.sendNewTask(proof, common.GnarkPlonkBls12_381)
+				err := tg.SendNewTask(proof, common.GnarkPlonkBls12_381)
 				if err != nil {
 					// we log the errors inside sendNewTask() so here we just continue to the next task
 					continue
@@ -119,14 +119,14 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 }
 
 // sendNewTask sends a new task to the task manager contract
-func (tg *TaskGenerator) sendNewTask(proof []byte, verifierId common.VerifierId) error {
+func (tg *TaskGenerator) SendNewTask(proof []byte, verifierId common.VerifierId) error {
 	_, taskIndex, err := tg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 	if err != nil {
 		tg.logger.Error("Task generator failed to send proof", "err", err)
 		return err
 	}
 
-	tg.logger.Infof("Generated new task with index %d", taskIndex)
+	tg.logger.Infof("Generated new task with index %d \n", taskIndex)
 
 	return nil
 }

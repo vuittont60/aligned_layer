@@ -125,3 +125,14 @@ start-task-generator: ##
 		--shared-avs-contracts-deployment ${DEPLOYMENT_FILES_DIR}/shared_avs_contracts_deployment_output.json \
 		--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
+	
+send-cairo-proof:
+	go run task_sender/cmd/main.go --proof tests/testing_data/fibo_5.proof \
+		--verifier-id cairo \
+		2>&1 | zap-pretty
+
+send-plonk-proof:
+	go run task_sender/cmd/main.go --proof tests/testing_data/plonk_cubic_circuit.proof \
+		--verifier-id plonk \
+		2>&1 | zap-pretty
+
