@@ -1,8 +1,8 @@
 package sp1
 
 /*
-#cgo darwin LDFLAGS: ./lib/libsp1_verifier.a
-#cgo linux LDFLAGS: ./lib/libsp1_verifier.a -ldl -lrt -lm
+#cgo darwin LDFLAGS: operator/sp1/lib/libsp1_verifier.a
+#cgo linux LDFLAGS: operator/sp1/lib/libsp1_verifier.a -ldl -lrt -lm
 
 #include "lib/sp1.h"
 */

@@ -112,10 +112,16 @@ build-lambdaworks:
 	@cd operator/cairo_platinum/lib && cargo build --release
 	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
 
+test-ffi-lambdaworks: build-lambdaworks
+	go test ./operator/sp1/... -v
+
 __SP1_FFI__: ## 
 build-sp1:
 	@cd operator/sp1/lib && cargo build --release
 	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.a operator/sp1/lib/libsp1_verifier.a
+
+test-ffi-sp1: build-sp1
+	go test ./operator/sp1/... -v
 
 clean:
 	@rm -f operator/cairo_platinum/lib/libcairo_platinum.a
