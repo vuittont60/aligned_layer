@@ -103,7 +103,7 @@ tests-unit: ## runs all unit tests
 tests-contract: ## runs all forge tests
 	cd contracts && forge test
 
-tests-integration: build-lambdaworks build-sp1 ## runs all integration tests
+tests-integration: build ## runs all integration tests
 	go test ./tests/integration/... -v -count=1 -c integration.test
 	./integration.test
 
@@ -122,6 +122,9 @@ build-sp1:
 
 test-ffi-sp1: build-sp1
 	go test ./operator/sp1/... -v
+
+build: build-lambdaworks build-sp1
+	go build ./...
 
 clean:
 	@rm -f operator/cairo_platinum/lib/libcairo_platinum.a
