@@ -103,7 +103,7 @@ tests-unit: ## runs all unit tests
 tests-contract: ## runs all forge tests
 	cd contracts && forge test
 
-tests-integration: build-lambdaworks ## runs all integration tests
+tests-integration: build-lambdaworks build-sp1 ## runs all integration tests
 	go test ./tests/integration/... -v -count=1 -c integration.test
 	./integration.test
 
@@ -112,6 +112,7 @@ build-lambdaworks:
 	@cd operator/cairo_platinum/lib && cargo build --release
 	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
 
+__SP1_FFI__: ## 
 build-sp1:
 	@cd operator/sp1/lib && cargo build --release
 	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.a operator/sp1/lib/libsp1_verifier.a
@@ -121,8 +122,8 @@ clean:
 	@rm -f operator/sp1/lib/libsp1_verifier.a
 	@rm -f integration_tests
 	@cd operator/cairo_platinum/lib && cargo clean 2> /dev/null
+	@cd operator/sp1/lib && cargo clean 2> /dev/null
 	@go clean ./...
-
 
 start-task-generator: ## 
 	go run task_generator/cmd/main.go --config config-files/aggregator.yaml \
