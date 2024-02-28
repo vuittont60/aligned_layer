@@ -12,7 +12,6 @@ CHAINID=31337
 # check in contracts/script/output/${CHAINID}/aligned_layer_avs_deployment_output.json
 STRATEGY_ADDRESS=0x7a2088a1bFc9d81c55368AE168C2C02570cB814F
 DEPLOYMENT_FILES_DIR=contracts/script/output/${CHAINID}
-ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 -----------------------------: ## 
 
