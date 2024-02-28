@@ -73,27 +73,8 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 		case <-ticker.C:
 			taskNum++
 
-			// If taskNum is even, a verify Cairo or Sp1 task is sent
-			// if taskNum is odd, a verify Gnark Plonk task is sent
-			// This should be an additional configuration parameter
-
-			// if taskNum%2 == 0 {
-			// 	proof = generateSp1Proof()
-			// 	// proof = generateCairoProof()
-			// 	err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
-			// 	// err := tg.SendNewTask(proof, common.LambdaworksCairo)
-			// 	if err != nil {
-			// 		continue
-			// 	}
-			// } else {
-			// 	proof = generateRandomProof(r)
-			// 	err := tg.SendNewTask(proof, common.LambdaworksCairo)
-			// 	if err != nil {
-			// 		continue
-			// 	}
-			// }
-
-			// Randomly creates tasks to verify correct and incorrect cairo proofs
+			// Randomly creates tasks to verify correct and incorrect proofs
+			// These proofs can be either Cairo, Plonk, Sp1 or a randomly generated one
 			switch r.Intn(5) {
 			case 0:
 				proof = generateCairoProof()
