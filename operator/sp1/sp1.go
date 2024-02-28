@@ -2,7 +2,7 @@ package sp1
 
 /*
 #cgo darwin LDFLAGS: -L./lib -lsp1_verifier
-#cgo linux LDFLAGS: -Loperator/sp1/lib -ldl -lsp1_verifier -lrt -lm
+#cgo linux LDFLAGS: -L./lib -lsp1_verifier -ldl -lrt -lm
 
 #include "lib/sp1.h"
 */
