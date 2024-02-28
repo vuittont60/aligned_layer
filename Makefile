@@ -104,27 +104,43 @@ tests-unit: ## runs all unit tests
 tests-contract: ## runs all forge tests
 	cd contracts && forge test
 
-tests-integration: build ## runs all integration tests
+tests-integration-macos: build-macos ## runs all integration tests
+	go test ./tests/integration/... -v -count=1 -c integration.test
+	./integration.test
+
+tests-integration-linux: build-linux ## runs all integration tests
 	go test ./tests/integration/... -v -count=1 -c integration.test
 	./integration.test
 
 __LAMBDAWORKS_FFI__: ## 
-build-lambdaworks:
+build-lambdaworks-macos:
 	@cd operator/cairo_platinum/lib && cargo build --release
 	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
 
-test-ffi-lambdaworks: build-lambdaworks
+build-lambdaworks-linux:
+	@cd operator/cairo_platinum/lib && cargo build --release
+	@cp operator/cairo_platinum/lib/targ
+
+test-ffi-lambdaworks: 
 	go test ./operator/cairo_platinum/... -v
 
 __SP1_FFI__: ## 
-build-sp1:
+build-sp1-macos:
 	@cd operator/sp1/lib && cargo build --release
 	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.dylib operator/sp1/lib/libsp1_verifier.dylib
 
-test-ffi-sp1: build-sp1
+build-sp1-linux:
+	@cd operator/sp1/lib && cargo build --release
+	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.so operator/sp1/lib/libsp1_verifier.so
+
+test-ffi-sp1: 
 	go test ./operator/sp1/... -v
 
-build: build-lambdaworks build-sp1
+build-macos: build-lambdaworks-macos build-sp1-macos
+	# go build -ldflags="-r $(ROOT_DIR)lib" ./... 
+	go build ./...
+
+build-linux: build-lambdaworks-linux build-sp1-linux
 	# go build -ldflags="-r $(ROOT_DIR)lib" ./... 
 	go build ./...
 
