@@ -144,6 +144,7 @@ build-linux: build-lambdaworks-linux build-sp1-linux
 	ls operator/sp1/lib 
 	go build -ldflags="-r operator/sp1/lib" ./... 
 
+
 clean:
 	@rm -f operator/cairo_platinum/lib/libcairo_platinum.a
 	@rm -f operator/sp1/lib/libsp1_verifier.dylib
