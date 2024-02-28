@@ -141,6 +141,7 @@ build-macos: build-lambdaworks-macos build-sp1-macos
 	go build ./...
 
 build-linux: build-lambdaworks-linux build-sp1-linux
+	ls operator/sp1/lib 
 	go build -ldflags="-r operator/sp1/lib" ./... 
 
 clean:
