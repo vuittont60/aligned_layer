@@ -219,7 +219,7 @@ func startAnvilTestContainer() testcontainers.Container {
 			},
 		},
 		Entrypoint:   []string{"anvil"},
-		Cmd:          []string{"--host", "0.0.0.0", "--load-state", "/root/.anvil/state.json"},
+		Cmd:          []string{"--host", "0.0.0.0", "--load-state", "/root/.anvil/state.json", "--gas-limit", "999999999"},
 		ExposedPorts: []string{"8545/tcp"},
 		WaitingFor:   wait.ForLog("Listening on"),
 	}
