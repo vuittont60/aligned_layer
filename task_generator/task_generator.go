@@ -77,42 +77,61 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 			// if taskNum is odd, a verify Gnark Plonk task is sent
 			// This should be an additional configuration parameter
 
-			if taskNum%2 == 0 {
-				// Randomly creates tasks to verify correct and incorrect cairo proofs
-				switch r.Intn(3) {
-				case 0:
-					proof = generateCairoProof()
-					err := tg.SendNewTask(proof, common.LambdaworksCairo)
-					if err != nil {
-						continue
-					}
-				case 1:
-					proof = generateSp1Proof()
-					err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
-					if err != nil {
-						continue
-					}
-				case 2:
-					proof = generateRandomProof(r)
-					err := tg.SendNewTask(proof, common.LambdaworksCairo)
-					if err != nil {
-						continue
-					}
+			// if taskNum%2 == 0 {
+			// 	proof = generateSp1Proof()
+			// 	// proof = generateCairoProof()
+			// 	err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
+			// 	// err := tg.SendNewTask(proof, common.LambdaworksCairo)
+			// 	if err != nil {
+			// 		continue
+			// 	}
+			// } else {
+			// 	proof = generateRandomProof(r)
+			// 	err := tg.SendNewTask(proof, common.LambdaworksCairo)
+			// 	if err != nil {
+			// 		continue
+			// 	}
+			// }
+
+			// Randomly creates tasks to verify correct and incorrect cairo proofs
+			switch r.Intn(5) {
+			case 0:
+				proof = generateCairoProof()
+				err := tg.SendNewTask(proof, common.LambdaworksCairo)
+				if err != nil {
+					continue
 				}
-			} else {
-				if r.Intn(3) != 0 {
-					proof = generatePlonkProof()
-				} else {
-					proof = generateRandomProof(r)
+			case 1:
+				proof = generateSp1Proof()
+				err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
+				if err != nil {
+					continue
 				}
-				err := tg.SendNewTask(proof, common.GnarkPlonkBls12_381)
+			case 2:
+				proof = generateRandomProof(r)
+				err := tg.SendNewTask(proof, common.LambdaworksCairo)
+				if err != nil {
+					continue
+				}
+			case 3:
+				proof = generatePlonkProof()
+				err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
+				if err != nil {
+					continue
+				}
+
+			case 4:
+				proof = generateRandomProof(r)
+				verifierId := r.Intn(3)
+				err := tg.SendNewTask(proof, common.VerifierId(verifierId))
 				if err != nil {
 					continue
 				}
 			}
-
 		}
+
 	}
+
 }
 
 // sendNewTask sends a new task to the task manager contract
@@ -148,6 +167,8 @@ func generatePlonkProof() []byte {
 
 func generateSp1Proof() []byte {
 	proofBytes, err := os.ReadFile("tests/testing_data/sp1_fibonacci.proof")
+	// proofBytes = make([]byte, 64)
+	// proofBytes = proofBytes[:100]
 	if err != nil {
 		panic("Could not read SP1 proof file")
 	}

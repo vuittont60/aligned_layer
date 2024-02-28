@@ -12,6 +12,7 @@ CHAINID=31337
 # check in contracts/script/output/${CHAINID}/aligned_layer_avs_deployment_output.json
 STRATEGY_ADDRESS=0x7a2088a1bFc9d81c55368AE168C2C02570cB814F
 DEPLOYMENT_FILES_DIR=contracts/script/output/${CHAINID}
+ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 -----------------------------: ## 
 
@@ -29,7 +30,7 @@ deploy-incredible-squaring-contracts-to-anvil-and-save-state: ## Deploy avs
 deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-save-state deploy-shared-avs-contracts-to-anvil-and-save-state deploy-incredible-squaring-contracts-to-anvil-and-save-state ## deploy eigenlayer, shared avs contracts, and inc-sq contracts 
 
 start-anvil-chain-with-el-and-avs-deployed: ## starts anvil from a saved state file (with el and avs contracts deployed)
-	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json
+	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 999999999
 
 bindings: ## generates contract bindings
 	cd contracts && ./generate-go-bindings.sh
@@ -113,22 +114,23 @@ build-lambdaworks:
 	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
 
 test-ffi-lambdaworks: build-lambdaworks
-	go test ./operator/sp1/... -v
+	go test ./operator/cairo_platinum/... -v
 
 __SP1_FFI__: ## 
 build-sp1:
 	@cd operator/sp1/lib && cargo build --release
-	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.a operator/sp1/lib/libsp1_verifier.a
+	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.dylib operator/sp1/lib/libsp1_verifier.dylib
 
 test-ffi-sp1: build-sp1
 	go test ./operator/sp1/... -v
 
 build: build-lambdaworks build-sp1
+	# go build -ldflags="-r $(ROOT_DIR)lib" ./... 
 	go build ./...
 
 clean:
 	@rm -f operator/cairo_platinum/lib/libcairo_platinum.a
-	@rm -f operator/sp1/lib/libsp1_verifier.a
+	@rm -f operator/sp1/lib/libsp1_verifier.dylib
 	@rm -f integration_tests
 	@cd operator/cairo_platinum/lib && cargo clean 2> /dev/null
 	@cd operator/sp1/lib && cargo clean 2> /dev/null
