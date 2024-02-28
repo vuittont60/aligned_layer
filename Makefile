@@ -119,7 +119,7 @@ build-lambdaworks-macos:
 
 build-lambdaworks-linux:
 	@cd operator/cairo_platinum/lib && cargo build --release
-	@cp operator/cairo_platinum/lib/targ
+	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
 
 test-ffi-lambdaworks: 
 	go test ./operator/cairo_platinum/... -v
