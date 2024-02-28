@@ -36,12 +36,20 @@ Start the aggregator:
 make start-aggregator
 ```
 
-Register the operator with eigenlayer and aligned layer, then start the process:
+Register the operator with eigenlayer and aligned layer, then start the process. In MacOs, run:
 
 ```bash
-make cli-setup-operator
+make cli-setup-operator-macos
 make start-operator
 ```
+
+for Linux, use 
+
+```bash
+make cli-setup-operator-linux
+make start-operator
+```
+
 
 Start the task generator, which will be sending periodic tasks to the Aligned Layer task manager:
 

@@ -75,7 +75,7 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 
 			// Randomly creates tasks to verify correct and incorrect proofs
 			// These proofs can be either Cairo, Plonk, Sp1 or a randomly generated one
-			switch r.Intn(5) {
+			switch r.Intn(4) {
 			case 0:
 				proof = generateCairoProof()
 				err := tg.SendNewTask(proof, common.LambdaworksCairo)
@@ -89,19 +89,12 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 					continue
 				}
 			case 2:
-				proof = generateRandomProof(r)
-				err := tg.SendNewTask(proof, common.LambdaworksCairo)
+				proof = generatePlonkProof()
+				err := tg.SendNewTask(proof, common.GnarkPlonkBls12_381)
 				if err != nil {
 					continue
 				}
 			case 3:
-				proof = generatePlonkProof()
-				err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
-				if err != nil {
-					continue
-				}
-
-			case 4:
 				proof = generateRandomProof(r)
 				verifierId := r.Intn(3)
 				err := tg.SendNewTask(proof, common.VerifierId(verifierId))
