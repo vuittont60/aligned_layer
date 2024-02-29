@@ -49,8 +49,15 @@ contract AlignedLayerTaskManagerTest is BLSMockAVSDeployer {
     function testCreateNewTask() public {
         bytes memory quorumNumbers = new bytes(0);
         cheats.prank(generator, generator);
-        bytes memory dummy_bad_proof_bytes = "0x4242";
-        tm.createNewTask(dummy_bad_proof_bytes, 0, 100, quorumNumbers);
+        bytes memory dummyBadProofBytes = "0x4242";
+        bytes memory dummyBadPubInput = "0x3442";
+        tm.createNewTask(
+            dummyBadProofBytes,
+            dummyBadPubInput,
+            0,
+            100,
+            quorumNumbers
+        );
         assertEq(tm.latestTaskNum(), 1);
     }
 }

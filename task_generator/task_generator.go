@@ -59,11 +59,12 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 	// We are randomizing bytes for bad proofs, all should fail
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var proof []byte
+	var pubInput []byte
 	badProof := make([]byte, 32)
 	r.Read(badProof)
 	proof = badProof
 
-	_ = tg.SendNewTask(proof, common.LambdaworksCairo)
+	_ = tg.SendNewTask(proof, pubInput, common.LambdaworksCairo)
 	taskNum++
 
 	for {
@@ -78,19 +79,19 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 			switch r.Intn(4) {
 			case 0:
 				proof = generateCairoProof()
-				err := tg.SendNewTask(proof, common.LambdaworksCairo)
+				err := tg.SendNewTask(proof, pubInput, common.LambdaworksCairo)
 				if err != nil {
 					continue
 				}
 			case 1:
 				proof = generateSp1Proof()
-				err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
+				err := tg.SendNewTask(proof, pubInput, common.Sp1BabyBearBlake3)
 				if err != nil {
 					continue
 				}
 			case 2:
 				proof = generatePlonkProof()
-				err := tg.SendNewTask(proof, common.GnarkPlonkBls12_381)
+				err := tg.SendNewTask(proof, pubInput, common.GnarkPlonkBls12_381)
 				if err != nil {
 					continue
 				}
@@ -109,8 +110,8 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 }
 
 // sendNewTask sends a new task to the task manager contract
-func (tg *TaskGenerator) SendNewTask(proof []byte, verifierId common.VerifierId) error {
-	_, taskIndex, err := tg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+func (tg *TaskGenerator) SendNewTask(proof []byte, pubInput []byte, verifierId common.VerifierId) error {
+	_, taskIndex, err := tg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, pubInput, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 	if err != nil {
 		tg.logger.Error("Task generator failed to send proof", "err", err)
 		return err
