@@ -141,8 +141,6 @@ func generatePlonkProof() []byte {
 
 func generateSp1Proof() []byte {
 	proofBytes, err := os.ReadFile("tests/testing_data/sp1_fibonacci.proof")
-	// proofBytes = make([]byte, 64)
-	// proofBytes = proofBytes[:100]
 	if err != nil {
 		panic("Could not read SP1 proof file")
 	}
