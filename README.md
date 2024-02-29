@@ -149,6 +149,6 @@ Proof aggregation can also be supported by proving the verification of many of t
 
 Aligned Layer is just a network of decentralized verifiers renting security from Ethereum. On the other hand, the Polygon aggregation layer, in essence, is a rollup verifying multiple proofs. That is not the case for Aligned Layer, which just executes a rust binary from different verifiers directly in multiple Ethereum validators.
 
-## Acknowledgment
+## Acknowledgments
 
-Layr-Labs for creating [Incredible Squaring AVS](https://github.com/Layr-Labs/incredible-squaring-avs), which was used to bootstrap the initial version of Aligned Layer
+We want to thank Layr-Labs for creating [Incredible Squaring AVS](https://github.com/Layr-Labs/incredible-squaring-avs), which was used to bootstrap the initial version of Aligned Layer, SuccintLabs for its [SP1](https://github.com/succinctlabs/sp1) zkVM and Consensys for its [gnark](https://github.com/Consensys/gnark) library, which have been crucial for showcasing the ease of embedding validity proof verification systems in Aligned Layer.
