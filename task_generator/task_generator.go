@@ -73,49 +73,39 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 		case <-ticker.C:
 			taskNum++
 
-			// If taskNum is even, a verify Cairo task is sent
-			// if taskNum is odd, a verify Gnark Plonk task is sent
-			// This should be an additional configuration parameter
-
-			if taskNum%2 == 0 {
-				// Randomly creates tasks to verify correct and incorrect cairo proofs
-				if r.Intn(3) != 0 {
-					var err error
-					proof, err = os.ReadFile("tests/testing_data/fibo_5.proof")
-					if err != nil {
-						panic("Could not read Cairo proof file")
-					}
-				} else {
-					badProof := make([]byte, 32)
-					r.Read(badProof)
-					proof = badProof
-				}
+			// Randomly creates tasks to verify correct and incorrect proofs
+			// These proofs can be either Cairo, Plonk, Sp1 or a randomly generated one
+			switch r.Intn(4) {
+			case 0:
+				proof = generateCairoProof()
 				err := tg.SendNewTask(proof, common.LambdaworksCairo)
 				if err != nil {
-					// we log the errors inside sendNewTask() so here we just continue to the next task
 					continue
 				}
-			} else {
-				if r.Intn(3) != 0 {
-					var err error
-					proof, err = os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
-					if err != nil {
-						panic("Could not read PLONK proof file")
-					}
-				} else {
-					badProof := make([]byte, 32)
-					r.Read(badProof)
-					proof = badProof
+			case 1:
+				proof = generateSp1Proof()
+				err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
+				if err != nil {
+					continue
 				}
+			case 2:
+				proof = generatePlonkProof()
 				err := tg.SendNewTask(proof, common.GnarkPlonkBls12_381)
 				if err != nil {
-					// we log the errors inside sendNewTask() so here we just continue to the next task
+					continue
+				}
+			case 3:
+				proof = generateRandomProof(r)
+				verifierId := r.Intn(3)
+				err := tg.SendNewTask(proof, common.VerifierId(verifierId))
+				if err != nil {
 					continue
 				}
 			}
-
 		}
+
 	}
+
 }
 
 // sendNewTask sends a new task to the task manager contract
@@ -129,4 +119,37 @@ func (tg *TaskGenerator) SendNewTask(proof []byte, verifierId common.VerifierId)
 	tg.logger.Infof("Generated new task with index %d \n", taskIndex)
 
 	return nil
+}
+
+func generateCairoProof() []byte {
+	proofBytes, err := os.ReadFile("tests/testing_data/fibo_5.proof")
+	if err != nil {
+		panic("Could not read CAIRO proof file")
+	}
+
+	return proofBytes
+}
+
+func generatePlonkProof() []byte {
+	proofBytes, err := os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
+	if err != nil {
+		panic("Could not read PLONK proof file")
+	}
+
+	return proofBytes
+}
+
+func generateSp1Proof() []byte {
+	proofBytes, err := os.ReadFile("tests/testing_data/sp1_fibonacci.proof")
+	if err != nil {
+		panic("Could not read SP1 proof file")
+	}
+
+	return proofBytes
+}
+
+func generateRandomProof(r *rand.Rand) []byte {
+	badProof := make([]byte, 32)
+	r.Read(badProof)
+	return badProof
 }

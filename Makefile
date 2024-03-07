@@ -29,7 +29,7 @@ deploy-incredible-squaring-contracts-to-anvil-and-save-state: ## Deploy avs
 deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-save-state deploy-shared-avs-contracts-to-anvil-and-save-state deploy-incredible-squaring-contracts-to-anvil-and-save-state ## deploy eigenlayer, shared avs contracts, and inc-sq contracts 
 
 start-anvil-chain-with-el-and-avs-deployed: ## starts anvil from a saved state file (with el and avs contracts deployed)
-	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json
+	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 999999999
 
 bindings: ## generates contract bindings
 	cd contracts && ./generate-go-bindings.sh
@@ -43,7 +43,9 @@ docker-start-everything: docker-build-and-publish-images ## starts aggregator an
 
 __CLI__: ## 
 
-cli-setup-operator: build-lambdaworks send-fund cli-register-operator-with-eigenlayer cli-register-operator-bls-pubkeys cli-deposit-into-mocktoken-strategy cli-register-operator-with-avs ## registers operator with eigenlayer and avs
+cli-setup-operator-macos: build-macos send-fund cli-register-operator-with-eigenlayer cli-register-operator-bls-pubkeys cli-deposit-into-mocktoken-strategy cli-register-operator-with-avs ## registers operator with eigenlayer and avs
+
+cli-setup-operator-linux: build-linux send-fund cli-register-operator-with-eigenlayer cli-register-operator-bls-pubkeys cli-deposit-into-mocktoken-strategy cli-register-operator-with-avs ## registers operator with eigenlayer and avs
 
 cli-register-operator-with-eigenlayer: ## registers operator with delegationManager
 	go run cli/main.go --config config-files/operator.anvil.yaml register-operator-with-eigenlayer
@@ -103,21 +105,53 @@ tests-unit: ## runs all unit tests
 tests-contract: ## runs all forge tests
 	cd contracts && forge test
 
-tests-integration: build-lambdaworks ## runs all integration tests
+tests-integration-macos: build-macos ## runs all integration tests
 	go test ./tests/integration/... -v -count=1 -c integration.test
 	./integration.test
 
+tests-integration-linux: build-linux ## runs all integration tests
+	go test -ldflags="-r operator/sp1/lib" ./tests/integration/... -v -count=1 -c integration.test
+	./integration.test
+
 __LAMBDAWORKS_FFI__: ## 
-build-lambdaworks:
+build-lambdaworks-macos:
 	@cd operator/cairo_platinum/lib && cargo build --release
 	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
 
+build-lambdaworks-linux:
+	@cd operator/cairo_platinum/lib && cargo build --release
+	@cp operator/cairo_platinum/lib/target/release/libcairo_platinum_ffi.a operator/cairo_platinum/lib/libcairo_platinum.a
+
+test-ffi-lambdaworks: 
+	go test ./operator/cairo_platinum/... -v
+
+__SP1_FFI__: ## 
+build-sp1-macos:
+	@cd operator/sp1/lib && cargo build --release
+	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.dylib operator/sp1/lib/libsp1_verifier.dylib
+
+build-sp1-linux:
+	@cd operator/sp1/lib && cargo build --release
+	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.so operator/sp1/lib/libsp1_verifier.so
+
+test-ffi-sp1: 
+	go test ./operator/sp1/... -v
+
+build-macos: build-lambdaworks-macos build-sp1-macos
+	# go build -ldflags="-r $(ROOT_DIR)lib" ./... 
+	go build ./...
+
+build-linux: build-lambdaworks-linux build-sp1-linux
+	ls operator/sp1/lib 
+	go build -ldflags="-r operator/sp1/lib" ./... 
+
 clean:
 	@rm -f operator/cairo_platinum/lib/libcairo_platinum.a
+	@rm -f operator/sp1/lib/libsp1_verifier.dylib
 	@rm -f integration_tests
 	@cd operator/cairo_platinum/lib && cargo clean 2> /dev/null
+	@cd operator/sp1/lib && cargo clean 2> /dev/null
 	@go clean ./...
-
 
 start-task-generator: ## 
 	go run task_generator/cmd/main.go --config config-files/aggregator.yaml \

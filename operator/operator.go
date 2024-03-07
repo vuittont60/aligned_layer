@@ -20,6 +20,7 @@ import (
 	"github.com/yetanotherco/aligned_layer/core/chainio"
 	"github.com/yetanotherco/aligned_layer/metrics"
 	"github.com/yetanotherco/aligned_layer/operator/cairo_platinum"
+	"github.com/yetanotherco/aligned_layer/operator/sp1"
 	"github.com/yetanotherco/aligned_layer/types"
 
 	sdkavsregistry "github.com/Layr-Labs/eigensdk-go/chainio/avsregistry"
@@ -335,8 +336,8 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 
 	proof := newTaskCreatedLog.Task.Proof
 	verifierId := newTaskCreatedLog.Task.VerifierId
-
 	proofLen := (uint)(len(proof))
+
 	o.logger.Info("Received new task with proof to verify",
 		"proofLen", proofLen,
 		"proofFirstBytes", "0x"+hex.EncodeToString(proof[0:8]),
@@ -347,7 +348,6 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		"QuorumThresholdPercentage", newTaskCreatedLog.Task.QuorumThresholdPercentage,
 	)
 
-	// For demonstration purposes, when the task index is even, a valid Cairo proof is read and verified.
 	if verifierId == uint16(common.LambdaworksCairo) {
 		proofBuffer := make([]byte, cairo_platinum.MAX_PROOF_SIZE)
 		copy(proofBuffer, proof)
@@ -359,20 +359,27 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
 			ProofIsCorrect:     VerificationResult,
 		}
+		return taskResponse
+	} else if verifierId == uint16(common.GnarkPlonkBls12_381) {
+		VerificationResult := o.VerifyPlonkProof(proof)
 
+		o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
+		taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
+			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
+			ProofIsCorrect:     VerificationResult,
+		}
+		return taskResponse
+	} else {
+		proofBuffer := make([]byte, sp1.MAX_PROOF_SIZE)
+		copy(proofBuffer, proof)
+		VerificationResult := sp1.VerifySp1Proof(([sp1.MAX_PROOF_SIZE]byte)(proofBuffer), (uint)(proofLen))
+		o.logger.Infof("SP1 proof verification result: %t", VerificationResult)
+		taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
+			ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
+			ProofIsCorrect:     VerificationResult,
+		}
 		return taskResponse
 	}
-
-	// When the task index is even, the Plonk proof is verified
-	VerificationResult := o.VerifyPlonkProof(proof)
-	o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
-
-	taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
-		ReferenceTaskIndex: newTaskCreatedLog.TaskIndex,
-		ProofIsCorrect:     VerificationResult,
-	}
-
-	return taskResponse
 }
 
 func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IAlignedLayerTaskManagerTaskResponse) (*aggregator.SignedTaskResponse, error) {
