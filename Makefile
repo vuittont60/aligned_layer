@@ -166,8 +166,8 @@ send-cairo-proof:
 		2>&1 | zap-pretty
 
 send-plonk-proof:
-	go run task_sender/cmd/main.go --proof tests/testing_data/plonk_cubic_circuit_with_inputs.proof \
-		--pub-input tests/testing_data/plonk_pub_inputs.bin \
+	go run task_sender/cmd/main.go --proof tests/testing_data/plonk_cubic_circuit.proof \
+		--pub-input tests/testing_data/witness.pub \
 		--verifier-id plonk \
 		2>&1 | zap-pretty
 

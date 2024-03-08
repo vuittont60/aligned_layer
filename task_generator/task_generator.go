@@ -138,7 +138,7 @@ func generatePlonkProof() ([]byte, []byte) {
 	if err != nil {
 		panic("Could not read PLONK proof file")
 	}
-	pubInputBytes, err := os.ReadFile("tests/testing_data/plonk_cubic_circuit_with_inputs.proof")
+	pubInputBytes, err := os.ReadFile("tests/testing_data/witness.pub")
 	if err != nil {
 		panic("Could not read PLONK public input file")
 	}

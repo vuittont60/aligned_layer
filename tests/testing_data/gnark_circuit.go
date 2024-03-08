@@ -20,7 +20,7 @@ type CubicCircuit struct {
 	// struct tags on a variable is optional
 	// default uses variable name and secret visibility.
 	X frontend.Variable `gnark:"x"`
-	Y frontend.Variable `gnark:"y"`
+	Y frontend.Variable `gnark:",public"`
 }
 
 // Define declares the circuit constraints
