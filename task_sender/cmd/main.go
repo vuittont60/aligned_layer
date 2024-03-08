@@ -31,7 +31,7 @@ var (
 	ProofFileFlag = cli.StringFlag{
 		Name:     "proof",
 		Required: true,
-		Usage:    "Load proof from `FILE`",
+		Usage:    "Load proof from `PROOF_FILE`",
 	}
 
 	VerifierIdFlag = cli.StringFlag{
@@ -39,11 +39,18 @@ var (
 		Required: true,
 		Usage:    "Set verifier ID",
 	}
+
+	PubInputIdFlag = cli.StringFlag{
+		Name:     "pub-input",
+		Required: false,
+		Usage:    "Load public inputs from `PUB_INPUT_FILE`",
+	}
 )
 
 var flags = []cli.Flag{
 	ProofFileFlag,
 	VerifierIdFlag,
+	PubInputIdFlag,
 }
 
 func main() {
@@ -85,6 +92,16 @@ func taskSenderMain(ctx *cli.Context) error {
 	}
 
 	var pubInput []byte
+	// When we have a PLONK proof, we should check for the public inputs.
+	// Cairo proofs have public inputs embedded, so no need to check for this CLI input for the moment.
+	if verifierId == common.GnarkPlonkBls12_381 {
+		pubInputFilePath := ctx.GlobalString(PubInputIdFlag.Name)
+		pubInput, err = os.ReadFile(pubInputFilePath)
+		if err != nil {
+			panic("Could not public input file")
+		}
+	}
+
 	err = taskGen.SendNewTask(proof, pubInput, verifierId)
 	if err != nil {
 		return err
