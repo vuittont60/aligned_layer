@@ -84,7 +84,8 @@ func taskSenderMain(ctx *cli.Context) error {
 		return err
 	}
 
-	err = taskGen.SendNewTask(proof, verifierId)
+	var pubInput []byte
+	err = taskGen.SendNewTask(proof, pubInput, verifierId)
 	if err != nil {
 		return err
 	}
