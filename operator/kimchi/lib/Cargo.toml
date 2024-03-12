@@ -12,3 +12,6 @@ kimchi = { git = "https://github.com/o1-labs/proof-systems" }
 o1-utils = { git = "https://github.com/o1-labs/proof-systems" }
 ark-ff = { version = "0.3.0", features = ["parallel", "asm"] }
 ark-ec = { version = "0.3.0", features = ["parallel"] }
+ark-poly = { version = "0.3.0", features = ["parallel"] }
+serde = "1.0.197"
+rmp-serde = "1.1.2"

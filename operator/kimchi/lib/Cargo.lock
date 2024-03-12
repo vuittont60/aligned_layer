@@ -550,8 +550,11 @@ version = "0.1.0"
 dependencies = [
  "ark-ec",
  "ark-ff",
+ "ark-poly",
  "kimchi",
  "o1-utils",
+ "rmp-serde",
+ "serde",
 ]
 
 [[package]]
