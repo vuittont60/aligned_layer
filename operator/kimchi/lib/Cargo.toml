@@ -1,0 +1,14 @@
+[package]
+name = "lib"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "kimchi-ecadd-proof-generator"
+path = "src/ec_add_proof_generator/main.rs"
+
+[dependencies]
+kimchi = { git = "https://github.com/o1-labs/proof-systems" }
+o1-utils = { git = "https://github.com/o1-labs/proof-systems" }
+ark-ff = { version = "0.3.0", features = ["parallel", "asm"] }
+ark-ec = { version = "0.3.0", features = ["parallel"] }
