@@ -1,5 +1,5 @@
 use std::array;
-use std::io::{BufReader, Write};
+use std::io::{BufReader, BufWriter};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -10,7 +10,6 @@ use ark_ff::One;
 use ark_ff::PrimeField;
 use ark_ff::UniformRand;
 use ark_ff::Zero;
-use ark_poly::domain::EvaluationDomain;
 use kimchi::curve::KimchiCurve;
 use kimchi::groupmap::GroupMap;
 use kimchi::mina_curves::pasta::VestaParameters;
@@ -166,7 +165,6 @@ fn main() {
 
     let prover_index = new_index_for_test::<Vesta>(gates, 0);
     let srs = prover_index.srs.clone();
-
     let group_map = <Vesta as CommitmentCurve>::Map::setup();
 
     let proof = ProverProof::create_recursive::<BaseSponge, ScalarSponge>(
@@ -199,6 +197,13 @@ fn main() {
         .to_file(verifier_index_file_path, None)
         .expect("Could not write verifier index");
 
+    let verifier_index_file = std::fs::File::create(verifier_index_file_path)
+        .expect("Could not create verifier index file");
+    let verifier_index_writer = BufWriter::new(verifier_index_file);
+    verifier_index
+        .serialize(&mut rmp_serde::Serializer::new(verifier_index_writer))
+        .expect("Could not serialize verifier index");
+
     let proof_file_path = Path::new("kimchi_ec_add.proof");
     let proof_file = std::fs::File::create(proof_file_path).unwrap();
     let writer = std::io::BufWriter::new(proof_file);
@@ -219,6 +224,8 @@ fn main() {
     println!("Kimchi proof written into {:?}", proof_file_path);
     println!("Kimchi SRS written into {:?}", srs_file_path);
 
+    // # ----------- PURE VERIFIER SECTION ---------------- #
+
     let deserialized_proof_file =
         std::fs::File::open(proof_file_path).expect("Could not open kimchi proof file");
     let proof_reader = BufReader::new(deserialized_proof_file);
@@ -229,45 +236,26 @@ fn main() {
     let deserialized_srs_file =
         std::fs::File::open(srs_file_path).expect("Could not open SRS file");
     let srs_reader = BufReader::new(deserialized_srs_file);
-    let deserialized_srs: kimchi::poly_commitment::srs::SRS<Vesta> =
+    let mut deserialized_srs: kimchi::poly_commitment::srs::SRS<Vesta> =
         kimchi::poly_commitment::srs::SRS::deserialize(&mut rmp_serde::Deserializer::new(
             srs_reader,
         ))
         .expect("Could not deserialize SRS");
 
-    // let deserialized_verifier_index_file = std::fs::File::open(verifier_index_file_path)
-    //     .expect("Could not open kimchi verifier index file");
-
-    let deserialized_verifier_index: VerifierIndex<Vesta, OpeningProof<Vesta>> =
-        VerifierIndex::from_file(
-            Arc::new(deserialized_srs),
-            verifier_index_file_path,
-            None,
-            *Vesta::other_curve_endo(),
-        )
+    let deserialized_verifier_index_file =
+        std::fs::File::open(verifier_index_file_path).expect("Could not open verifier index file");
+    let deserialized_verifier_index_reader = BufReader::new(deserialized_verifier_index_file);
+    let mut deserialized_verifier_index: VerifierIndex<Vesta, OpeningProof<Vesta>> =
+        VerifierIndex::deserialize(&mut rmp_serde::Deserializer::new(
+            deserialized_verifier_index_reader,
+        ))
         .expect("Could not deserialize verifier index");
-    // let verifier_index_reader = BufReader::new(deserialized_verifier_index_file);
-    // let deserialized_verifier_index: VerifierIndex<Vesta, OpeningProof<Vesta>> =
-    //     VerifierIndex::deserialize(&mut rmp_serde::Deserializer::new(verifier_index_reader))
-    //         .expect("Could not deserialize kimchi verifier index");
 
-    // println!(
-    //     "DOMAIN SIZE VERIFIER DESERIALIZED: {}",
-    //     deserialized_verifier_index.domain.size()
-    // );
-    // println!(
-    //     "DOMAIN SIZE VERIFIFER OrIginal: {}",
-    //     verifier_index.domain.size()
-    // );
+    deserialized_srs.add_lagrange_basis(deserialized_verifier_index.domain);
+    let endo = *Vesta::other_curve_endo();
 
-    // let lg = (&deserialized_verifier_index)
-    //     .srs()
-    //     .get_lagrange_basis(deserialized_verifier_index.domain.size());
-
-    // let lg_o = srs.get_lagrange_basis(512);
-
-    // println!("LAGRANGE: {:?}", lg);
-    // println!("LAGRANGE ORIGINAL: {:?}", lg_o);
+    deserialized_verifier_index.endo = endo;
+    deserialized_verifier_index.srs = Arc::new(deserialized_srs);
 
     verify::<GroupAffine<VestaParameters>, BaseSponge, ScalarSponge, OpeningProof<Vesta>>(
         &group_map,
@@ -276,4 +264,6 @@ fn main() {
         &Vec::new(),
     )
     .expect("Deserialized kimchi proof did not verify");
+
+    println!("Deserialized proof verified successfully");
 }
