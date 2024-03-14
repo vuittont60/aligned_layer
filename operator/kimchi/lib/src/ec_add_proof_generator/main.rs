@@ -42,9 +42,9 @@ fn main() {
     use o1_utils::tests::make_test_rng;
     let mut rng = make_test_rng();
 
-    let num_doubles = 100;
-    let num_additions = 100;
-    let num_infs = 100;
+    let num_doubles = 10;
+    let num_additions = 10;
+    let num_infs = 10;
 
     let mut gates: Vec<CircuitGate<Fp>> = Vec::new();
 
@@ -272,7 +272,7 @@ fn main() {
     let aggregated_pub_input_bytes =
         serialize_kimchi_pub_input(&deserialized_verifier_index, &deserialized_srs);
 
-    let aggregated_pub_input_file_path = Path::new("aggregated_kimchi_pub_input.bin");
+    let aggregated_pub_input_file_path = Path::new("kimchi_aggregated_pub_input.bin");
     let aggreagated_pub_input_file = std::fs::File::create(aggregated_pub_input_file_path)
         .expect("Could not create kimchi aggregated pub input file");
     let mut aggregated_pub_input_writer = BufWriter::new(aggreagated_pub_input_file);

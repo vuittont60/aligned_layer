@@ -15,8 +15,8 @@ use kimchi::{
     verifier_index::VerifierIndex,
 };
 
-const MAX_PROOF_SIZE: usize = 1024 * 1024;
-const MAX_PUB_INPUT_SIZE: usize = 1024 * 1024;
+const MAX_PROOF_SIZE: usize = 10 * 1024;
+const MAX_PUB_INPUT_SIZE: usize = 3 * 1024 * 1024;
 
 type SpongeParams = PlonkSpongeConstantsKimchi;
 type BaseSponge = DefaultFqSponge<VestaParameters, SpongeParams>;
@@ -29,9 +29,7 @@ pub extern "C" fn verify_kimchi_proof_ffi(
     pub_input_bytes: &[u8; MAX_PUB_INPUT_SIZE],
     pub_input_len: usize,
 ) -> bool {
-    let proof = if let Ok(proof) =
-        bincode::deserialize::<ProverProof<Vesta, OpeningProof<Vesta>>>(&proof_bytes[..proof_len])
-    {
+    let proof = if let Ok(proof) = rmp_serde::from_slice(&proof_bytes[..proof_len]) {
         proof
     } else {
         return false;
@@ -121,6 +119,25 @@ mod test {
     use serde::Deserialize;
 
     use super::*;
+
+    const KIMCHI_PROOF: &[u8] = include_bytes!("../kimchi_ec_add.proof");
+    const KIMCHI_AGGREGATED_PUB_INPUT: &[u8] = include_bytes!("../kimchi_aggregated_pub_input.bin");
+
+    #[test]
+    fn kimchi_ec_add_proof_verifies() {
+        let mut proof_buffer = [0u8; super::MAX_PROOF_SIZE];
+        let proof_size = KIMCHI_PROOF.len();
+        proof_buffer[..proof_size].clone_from_slice(KIMCHI_PROOF);
+
+        let mut pub_input_buffer = [0u8; super::MAX_PUB_INPUT_SIZE];
+        let pub_input_size = KIMCHI_AGGREGATED_PUB_INPUT.len();
+        pub_input_buffer[..pub_input_size].clone_from_slice(KIMCHI_AGGREGATED_PUB_INPUT);
+
+        let result =
+            verify_kimchi_proof_ffi(&proof_buffer, proof_size, &pub_input_buffer, pub_input_size);
+
+        assert!(result)
+    }
 
     #[test]
     fn serialize_deserialize_pub_input_works() {
