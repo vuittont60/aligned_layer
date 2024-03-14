@@ -17,7 +17,6 @@ use kimchi::mina_poseidon::constants::PlonkSpongeConstantsKimchi;
 use kimchi::mina_poseidon::sponge::DefaultFqSponge;
 use kimchi::poly_commitment::commitment::CommitmentCurve;
 use kimchi::poly_commitment::evaluation_proof::OpeningProof;
-use kimchi::poly_commitment::SRS;
 use kimchi::proof::ProverProof;
 use kimchi::prover_index::testing::new_index_for_test;
 use kimchi::verifier::verify;
