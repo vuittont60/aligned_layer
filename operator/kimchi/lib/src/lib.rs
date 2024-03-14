@@ -11,7 +11,6 @@ use kimchi::{
     curve::KimchiCurve,
     mina_curves::pasta::Vesta,
     poly_commitment::{evaluation_proof::OpeningProof, srs::SRS},
-    proof::ProverProof,
     verifier_index::VerifierIndex,
 };
 
@@ -60,9 +59,9 @@ pub fn serialize_kimchi_pub_input(
 ) -> Vec<u8> {
     let mut pub_input: Vec<u8> = Vec::new();
     let verifier_index_bytes =
-        bincode::serialize(verifier_index).expect("Could not serialize verifier index");
+        rmp_serde::to_vec(verifier_index).expect("Could not serialize verifier index");
     let verifier_index_bytes_len = verifier_index_bytes.len() as u32;
-    let srs_bytes = bincode::serialize(srs).expect("Could not serialize SRS");
+    let srs_bytes = rmp_serde::to_vec(srs).expect("Could not serialize SRS");
     let srs_bytes_len = srs_bytes.len() as u32;
 
     pub_input.extend_from_slice(&verifier_index_bytes_len.to_be_bytes());
@@ -85,13 +84,13 @@ fn deserialize_kimchi_pub_input(
         u32::from_be_bytes(verifier_index_bytes_len_bytes.as_slice().try_into()?) as usize;
     let verifier_index_bytes: Vec<u8> = pub_input_bytes.drain(..verifier_index_bytes_len).collect();
     let mut verifier_index: VerifierIndex<Vesta, OpeningProof<Vesta>> =
-        bincode::deserialize(&verifier_index_bytes)?;
+        rmp_serde::from_slice(&verifier_index_bytes)?;
 
     // srs deserialization
     let srs_bytes_len_bytes: Vec<u8> = pub_input_bytes.drain(..u32_bytes_size).collect();
     let srs_bytes_len = u32::from_be_bytes(srs_bytes_len_bytes.as_slice().try_into()?) as usize;
     let srs_bytes: Vec<u8> = pub_input_bytes.drain(..srs_bytes_len).collect();
-    let mut srs: SRS<Vesta> = bincode::deserialize(&srs_bytes)?;
+    let mut srs: SRS<Vesta> = rmp_serde::from_slice(&srs_bytes)?;
 
     if !(pub_input_bytes.is_empty()) {
         return Err(Box::new(Error::new(
@@ -115,6 +114,7 @@ mod test {
     use std::{io::BufReader, path::Path};
 
     use kimchi::groupmap::GroupMap;
+    use kimchi::proof::ProverProof;
     use kimchi::{poly_commitment::commitment::CommitmentCurve, verifier::verify};
     use serde::Deserialize;
 
