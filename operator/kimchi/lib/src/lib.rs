@@ -111,16 +111,15 @@ fn deserialize_kimchi_pub_input(
 
 #[cfg(test)]
 mod test {
-    use std::{io::BufReader, path::Path};
+    use super::*;
 
     use kimchi::groupmap::GroupMap;
     use kimchi::proof::ProverProof;
     use kimchi::{poly_commitment::commitment::CommitmentCurve, verifier::verify};
-    use serde::Deserialize;
-
-    use super::*;
 
     const KIMCHI_PROOF: &[u8] = include_bytes!("../kimchi_ec_add.proof");
+    const KIMCHI_VERIFIER_INDEX: &[u8] = include_bytes!("../kimchi_verifier_index.bin");
+    const KIMCHI_SRS: &[u8] = include_bytes!("../kimchi_srs.bin");
     const KIMCHI_AGGREGATED_PUB_INPUT: &[u8] = include_bytes!("../kimchi_aggregated_pub_input.bin");
 
     #[test]
@@ -141,26 +140,15 @@ mod test {
 
     #[test]
     fn serialize_deserialize_pub_input_works() {
-        let proof_file_path = Path::new("kimchi_ec_add.proof");
-        let proof_file = std::fs::File::open(proof_file_path).expect("Could not open proof file");
-        let proof_reader = BufReader::new(proof_file);
-        let proof: ProverProof<Vesta, OpeningProof<Vesta>> =
-            ProverProof::deserialize(&mut rmp_serde::Deserializer::new(proof_reader))
-                .expect("Could not deserialize kimchi proof from file");
+        let proof: ProverProof<Vesta, OpeningProof<Vesta>> = rmp_serde::from_slice(KIMCHI_PROOF)
+            .expect("Could not deserialize kimchi proof from file");
 
-        let verifier_index_file_path = Path::new("kimchi_verifier_index.bin");
-        let verifier_index_file = std::fs::File::open(verifier_index_file_path)
-            .expect("Could not open verifier index file");
-        let verifier_index_reader = BufReader::new(verifier_index_file);
         let mut verifier_index: VerifierIndex<Vesta, OpeningProof<Vesta>> =
-            VerifierIndex::deserialize(&mut rmp_serde::Deserializer::new(verifier_index_reader))
+            rmp_serde::from_slice(KIMCHI_VERIFIER_INDEX)
                 .expect("Could not deserialize verifier index");
 
-        let srs_file_path = Path::new("kimchi_srs.bin");
-        let srs_file = std::fs::File::open(srs_file_path).expect("Could not open SRS file");
-        let srs_reader = BufReader::new(srs_file);
-        let mut srs: SRS<Vesta> = SRS::deserialize(&mut rmp_serde::Deserializer::new(srs_reader))
-            .expect("Could not deserialize verifier index");
+        let mut srs: SRS<Vesta> =
+            rmp_serde::from_slice(KIMCHI_SRS).expect("Could not deserialize verifier index");
 
         srs.add_lagrange_basis(verifier_index.domain);
         verifier_index.srs = Arc::new(srs.clone());
