@@ -30,7 +30,7 @@ use kimchi::{
     mina_curves::pasta::{Fp, Pallas, Vesta},
     mina_poseidon::sponge::DefaultFrSponge,
 };
-use lib::serialize_kimchi_pub_input;
+use kimchi_verifier_ffi::serialize_kimchi_pub_input;
 use serde::ser::Serialize;
 use serde::Deserialize;
 

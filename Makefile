@@ -128,11 +128,20 @@ test-ffi-lambdaworks:
 __SP1_FFI__: ## 
 build-sp1-macos:
 	@cd operator/sp1/lib && cargo build --release
-	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.dylib operator/sp1/lib/libsp1_verifier.dylib
+	@cp operator/sp1/lib/target/release/libsp1_verifier_ffi.dylib operator/sp1/lib/libsp1_verifier.dylib
 
 build-sp1-linux:
 	@cd operator/sp1/lib && cargo build --release
-	@cp operator/sp1/lib/target/release/libsp1_verifier_wrapper.so operator/sp1/lib/libsp1_verifier.so
+	@cp operator/sp1/lib/target/release/libsp1_verifier_ffi.so operator/sp1/lib/libsp1_verifier.so
+
+__KIMCHI_FFI__: ## 
+build-kimchi-macos:
+	@cd operator/kimchi/lib && cargo build --release
+	@cp operator/kimchi/lib/target/release/libkimchi_verifier_ffi.dylib operator/kimchi/lib/libkimchi_verifier.dylib
+
+build-kimchi-linux:
+	@cd operator/kimchi/lib && cargo build --release
+	@cp operator/kimchi/lib/target/release/libkimchi_verifier_ffi.so operator/kimchi/lib/libkimchi_verifier.so
 
 test-ffi-sp1: 
 	go test ./operator/sp1/... -v
