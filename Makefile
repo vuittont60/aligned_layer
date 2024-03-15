@@ -29,7 +29,8 @@ deploy-incredible-squaring-contracts-to-anvil-and-save-state: ## Deploy avs
 deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-save-state deploy-shared-avs-contracts-to-anvil-and-save-state deploy-incredible-squaring-contracts-to-anvil-and-save-state ## deploy eigenlayer, shared avs contracts, and inc-sq contracts 
 
 start-anvil-chain-with-el-and-avs-deployed: ## starts anvil from a saved state file (with el and avs contracts deployed)
-	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 999999999
+	# anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 9999999999999999999
+	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --disable-block-gas-limit 
 
 bindings: ## generates contract bindings
 	cd contracts && ./generate-go-bindings.sh
@@ -134,6 +135,9 @@ build-sp1-linux:
 	@cd operator/sp1/lib && cargo build --release
 	@cp operator/sp1/lib/target/release/libsp1_verifier_ffi.so operator/sp1/lib/libsp1_verifier.so
 
+test-sp1-ffi: 
+	go test ./operator/sp1/... -v
+
 __KIMCHI_FFI__: ## 
 build-kimchi-macos:
 	@cd operator/kimchi/lib && cargo build --release
@@ -143,23 +147,24 @@ build-kimchi-linux:
 	@cd operator/kimchi/lib && cargo build --release
 	@cp operator/kimchi/lib/target/release/libkimchi_verifier_ffi.so operator/kimchi/lib/libkimchi_verifier.so
 
-test-ffi-sp1: 
-	go test ./operator/sp1/... -v
+test-kimchi-ffi: 
+	go test ./operator/kimchi/... -v
 
-build-macos: build-lambdaworks-macos build-sp1-macos
+build-macos: build-lambdaworks-macos build-sp1-macos build-kimchi-macos
 	# go build -ldflags="-r $(ROOT_DIR)lib" ./... 
 	go build ./...
 
-build-linux: build-lambdaworks-linux build-sp1-linux
-	ls operator/sp1/lib 
+build-linux: build-lambdaworks-linux build-sp1-linux build-kimchi-linux
 	go build -ldflags="-r operator/sp1/lib" ./... 
 
 clean:
 	@rm -f operator/cairo_platinum/lib/libcairo_platinum.a
 	@rm -f operator/sp1/lib/libsp1_verifier.dylib
+	@rm -f operator/kimchi/lib/libkimchi_verifier.dylib
 	@rm -f integration_tests
 	@cd operator/cairo_platinum/lib && cargo clean 2> /dev/null
 	@cd operator/sp1/lib && cargo clean 2> /dev/null
+	@cd operator/kimchi/lib && cargo clean 2> /dev/null
 	@go clean ./...
 
 start-task-generator: ## 
@@ -174,9 +179,19 @@ send-cairo-proof:
 		--verifier-id cairo \
 		2>&1 | zap-pretty
 
+send-sp1-proof:
+	go run task_sender/cmd/main.go --proof tests/testing_data/sp1_fibonacci.proof \
+		--verifier-id sp1 \
+		2>&1 | zap-pretty
+
 send-plonk-proof:
 	go run task_sender/cmd/main.go --proof tests/testing_data/plonk_cubic_circuit.proof \
 		--pub-input tests/testing_data/witness.pub \
 		--verifier-id plonk \
 		2>&1 | zap-pretty
 
+send-kimchi-proof:
+	go run task_sender/cmd/main.go --proof tests/testing_data/kimchi/kimchi_ec_add.proof \
+		--pub-input tests/testing_data/kimchi/kimchi_aggregated_pub_input.bin \
+		--verifier-id kimchi \
+		2>&1 | zap-pretty
