@@ -97,7 +97,6 @@ func taskSenderMain(ctx *cli.Context) error {
 	// Cairo proofs have public inputs embedded, so no need to check for this CLI input for the moment.
 	// This should be done for every proving system.
 	if verifierId == common.GnarkPlonkBls12_381 || verifierId == common.Kimchi {
-		// if verifierId == common.GnarkPlonkBls12_381 {
 		pubInputFilePath := ctx.GlobalString(PubInputIdFlag.Name)
 		pubInput, err = os.ReadFile(pubInputFilePath)
 		if err != nil {
@@ -116,7 +115,7 @@ func taskSenderMain(ctx *cli.Context) error {
 }
 
 func parseVerifierId(verifierIdStr string) (common.VerifierId, error) {
-	// standard space trimming
+	// standard whitespace trimming
 	verifierIdStr = strings.TrimSpace(verifierIdStr)
 	switch verifierIdStr {
 	case "cairo":
