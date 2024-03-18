@@ -169,7 +169,7 @@ func generateKimchiProof() ([]byte, []byte) {
 		panic("Could not read Kimchi proof file")
 	}
 
-	pubInputBytes, err := os.ReadFile("tests/testing_data/kimchi/kimchi_aggregated_pub_input.bin")
+	pubInputBytes, err := os.ReadFile("tests/testing_data/kimchi/kimchi_verifier_index.bin")
 	if err != nil {
 		panic("Could not read Kimchi public input file")
 	}
