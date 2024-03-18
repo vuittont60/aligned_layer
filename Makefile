@@ -111,7 +111,7 @@ tests-integration-macos: build-macos ## runs all integration tests
 	./integration.test
 
 tests-integration-linux: build-linux ## runs all integration tests
-	go test -ldflags="-r operator/sp1/lib" ./tests/integration/... -v -count=1 -c integration.test
+	go test -ldflags="-r operator/sp1/lib:operator/kimchi/lib" ./tests/integration/... -v -count=1 -c integration.test
 	./integration.test
 
 __LAMBDAWORKS_FFI__: ## 
