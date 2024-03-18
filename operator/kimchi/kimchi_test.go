@@ -21,7 +21,7 @@ func TestEcAddKimchiProofVerifies(t *testing.T) {
 		t.Errorf("could not read bytes from kimchi proof file")
 	}
 
-	pubInputFile, err := os.Open("lib/kimchi_aggregated_pub_input.bin")
+	pubInputFile, err := os.Open("lib/kimchi_verifier_index.bin")
 	if err != nil {
 		t.Errorf("could not open kimchi aggregated public input file")
 	}
