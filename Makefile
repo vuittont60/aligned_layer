@@ -29,8 +29,8 @@ deploy-incredible-squaring-contracts-to-anvil-and-save-state: ## Deploy avs
 deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-save-state deploy-shared-avs-contracts-to-anvil-and-save-state deploy-incredible-squaring-contracts-to-anvil-and-save-state ## deploy eigenlayer, shared avs contracts, and inc-sq contracts 
 
 start-anvil-chain-with-el-and-avs-deployed: ## starts anvil from a saved state file (with el and avs contracts deployed)
-	# anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 9999999999999999999
-	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --disable-block-gas-limit 
+	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 9999999999999999999
+	# anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --disable-block-gas-limit 
 
 bindings: ## generates contract bindings
 	cd contracts && ./generate-go-bindings.sh
@@ -192,6 +192,8 @@ send-plonk-proof:
 
 send-kimchi-proof:
 	go run task_sender/cmd/main.go --proof tests/testing_data/kimchi/kimchi_ec_add.proof \
-		--pub-input tests/testing_data/kimchi/kimchi_aggregated_pub_input.bin \
+		--pub-input tests/testing_data/kimchi/kimchi_verifier_index.bin \
 		--verifier-id kimchi \
 		2>&1 | zap-pretty
+
+	

@@ -18,6 +18,7 @@ use kimchi::mina_poseidon::constants::PlonkSpongeConstantsKimchi;
 use kimchi::mina_poseidon::sponge::DefaultFqSponge;
 use kimchi::poly_commitment::commitment::CommitmentCurve;
 use kimchi::poly_commitment::evaluation_proof::OpeningProof;
+use kimchi::poly_commitment::srs::SRS;
 use kimchi::proof::ProverProof;
 use kimchi::prover_index::testing::new_index_for_test;
 use kimchi::verifier::verify;
@@ -30,7 +31,6 @@ use kimchi::{
     mina_curves::pasta::{Fp, Pallas, Vesta},
     mina_poseidon::sponge::DefaultFrSponge,
 };
-use kimchi_verifier_ffi::serialize_kimchi_pub_input;
 use serde::ser::Serialize;
 use serde::Deserialize;
 
@@ -42,9 +42,9 @@ fn main() {
     use o1_utils::tests::make_test_rng;
     let mut rng = make_test_rng();
 
-    let num_doubles = 10;
-    let num_additions = 10;
-    let num_infs = 10;
+    let num_doubles = 5;
+    let num_additions = 5;
+    let num_infs = 5;
 
     let mut gates: Vec<CircuitGate<Fp>> = Vec::new();
 
@@ -165,7 +165,6 @@ fn main() {
     }
 
     let prover_index = new_index_for_test::<Vesta>(gates, 0);
-    let srs = prover_index.srs.clone();
     let group_map = <Vesta as CommitmentCurve>::Map::setup();
 
     let proof = ProverProof::create_recursive::<BaseSponge, ScalarSponge>(
@@ -213,18 +212,11 @@ fn main() {
         .serialize(&mut rmp_serde::Serializer::new(writer))
         .expect("Could not serialize kimchi proof");
 
-    let srs_file_path = Path::new("kimchi_srs.bin");
-    let srs_file = std::fs::File::create(srs_file_path).unwrap();
-    let srs_writer = std::io::BufWriter::new(srs_file);
-    srs.serialize(&mut rmp_serde::Serializer::new(srs_writer))
-        .expect("Could not serialize kimchi SRS");
-
     println!(
         "Kimchi verifier index written into {:?}",
         verifier_index_file_path
     );
     println!("Kimchi proof written into {:?}", proof_file_path);
-    println!("Kimchi SRS written into {:?}", srs_file_path);
 
     // # ----------- PURE VERIFIER SECTION ---------------- #
 
@@ -235,15 +227,6 @@ fn main() {
         ProverProof::deserialize(&mut rmp_serde::Deserializer::new(proof_reader))
             .expect("Could not deserialize kimchi proof");
 
-    let deserialized_srs_file =
-        std::fs::File::open(srs_file_path).expect("Could not open SRS file");
-    let srs_reader = BufReader::new(deserialized_srs_file);
-    let mut deserialized_srs: kimchi::poly_commitment::srs::SRS<Vesta> =
-        kimchi::poly_commitment::srs::SRS::deserialize(&mut rmp_serde::Deserializer::new(
-            srs_reader,
-        ))
-        .expect("Could not deserialize SRS");
-
     let deserialized_verifier_index_file =
         std::fs::File::open(verifier_index_file_path).expect("Could not open verifier index file");
     let deserialized_verifier_index_reader = BufReader::new(deserialized_verifier_index_file);
@@ -253,11 +236,12 @@ fn main() {
         ))
         .expect("Could not deserialize verifier index");
 
-    deserialized_srs.add_lagrange_basis(deserialized_verifier_index.domain);
     let endo = *Vesta::other_curve_endo();
+    let mut srs = SRS::<Vesta>::create(verifier_index.max_poly_size);
+    srs.add_lagrange_basis(deserialized_verifier_index.domain);
 
     deserialized_verifier_index.endo = endo;
-    deserialized_verifier_index.srs = Arc::new(deserialized_srs.clone());
+    deserialized_verifier_index.srs = Arc::new(srs.clone());
 
     verify::<GroupAffine<VestaParameters>, BaseSponge, ScalarSponge, OpeningProof<Vesta>>(
         &group_map,
@@ -269,19 +253,18 @@ fn main() {
 
     println!("Deserialized proof verified successfully");
 
-    let aggregated_pub_input_bytes =
-        serialize_kimchi_pub_input(&deserialized_verifier_index, &deserialized_srs);
-
-    let aggregated_pub_input_file_path = Path::new("kimchi_aggregated_pub_input.bin");
-    let aggreagated_pub_input_file = std::fs::File::create(aggregated_pub_input_file_path)
+    let verifier_index_bytes = rmp_serde::to_vec(&deserialized_verifier_index)
+        .expect("Could not serialize verifier index");
+    let verifier_index_file_path = Path::new("kimchi_verifier_index.bin");
+    let verifier_index_file = std::fs::File::create(verifier_index_file_path)
         .expect("Could not create kimchi aggregated pub input file");
-    let mut aggregated_pub_input_writer = BufWriter::new(aggreagated_pub_input_file);
-    aggregated_pub_input_writer
-        .write_all(&aggregated_pub_input_bytes)
+    let mut verifier_index_writer = BufWriter::new(verifier_index_file);
+    verifier_index_writer
+        .write_all(&verifier_index_bytes)
         .expect("Could not serialize kimchi aggregated pub input");
 
     println!(
-        "Aggregated kimchi public input written into {:?}",
-        aggregated_pub_input_file_path
+        "Kimchi verifier index (public input) written into {:?}",
+        verifier_index_file_path
     );
 }

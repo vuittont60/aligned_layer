@@ -1,5 +1,4 @@
-use std::io::ErrorKind;
-use std::{io::Error, mem, sync::Arc};
+use std::sync::Arc;
 
 use kimchi::groupmap::GroupMap;
 use kimchi::mina_curves::pasta::{Fp, VestaParameters};
@@ -15,7 +14,7 @@ use kimchi::{
 };
 
 const MAX_PROOF_SIZE: usize = 10 * 1024;
-const MAX_PUB_INPUT_SIZE: usize = 3 * 1024 * 1024;
+const MAX_PUB_INPUT_SIZE: usize = 50 * 1024;
 
 type SpongeParams = PlonkSpongeConstantsKimchi;
 type BaseSponge = DefaultFqSponge<VestaParameters, SpongeParams>;
@@ -53,55 +52,15 @@ pub extern "C" fn verify_kimchi_proof_ffi(
     .is_ok()
 }
 
-pub fn serialize_kimchi_pub_input(
-    verifier_index: &VerifierIndex<Vesta, OpeningProof<Vesta>>,
-    srs: &SRS<Vesta>,
-) -> Vec<u8> {
-    let mut pub_input: Vec<u8> = Vec::new();
-    let verifier_index_bytes =
-        rmp_serde::to_vec(verifier_index).expect("Could not serialize verifier index");
-    let verifier_index_bytes_len = verifier_index_bytes.len() as u32;
-    let srs_bytes = rmp_serde::to_vec(srs).expect("Could not serialize SRS");
-    let srs_bytes_len = srs_bytes.len() as u32;
-
-    pub_input.extend_from_slice(&verifier_index_bytes_len.to_be_bytes());
-    pub_input.extend_from_slice(&verifier_index_bytes);
-    pub_input.extend_from_slice(&srs_bytes_len.to_be_bytes());
-    pub_input.extend_from_slice(&srs_bytes);
-
-    pub_input
-}
-
 fn deserialize_kimchi_pub_input(
     pub_input_bytes: Vec<u8>,
 ) -> Result<VerifierIndex<Vesta, OpeningProof<Vesta>>, Box<dyn std::error::Error>> {
-    let mut pub_input_bytes = pub_input_bytes;
-    let u32_bytes_size = mem::size_of::<u32>();
-
-    // verifier index deserialization
-    let verifier_index_bytes_len_bytes: Vec<u8> = pub_input_bytes.drain(..u32_bytes_size).collect();
-    let verifier_index_bytes_len =
-        u32::from_be_bytes(verifier_index_bytes_len_bytes.as_slice().try_into()?) as usize;
-    let verifier_index_bytes: Vec<u8> = pub_input_bytes.drain(..verifier_index_bytes_len).collect();
     let mut verifier_index: VerifierIndex<Vesta, OpeningProof<Vesta>> =
-        rmp_serde::from_slice(&verifier_index_bytes)?;
+        rmp_serde::from_slice(&pub_input_bytes)?;
 
-    // srs deserialization
-    let srs_bytes_len_bytes: Vec<u8> = pub_input_bytes.drain(..u32_bytes_size).collect();
-    let srs_bytes_len = u32::from_be_bytes(srs_bytes_len_bytes.as_slice().try_into()?) as usize;
-    let srs_bytes: Vec<u8> = pub_input_bytes.drain(..srs_bytes_len).collect();
-    let mut srs: SRS<Vesta> = rmp_serde::from_slice(&srs_bytes)?;
-
-    if !(pub_input_bytes.is_empty()) {
-        return Err(Box::new(Error::new(
-            ErrorKind::Other,
-            "Public input buffer should be empty",
-        )));
-    }
-
+    let mut srs = SRS::<Vesta>::create(verifier_index.max_poly_size);
     // add necessary fields to verifier index
     srs.add_lagrange_basis(verifier_index.domain);
-
     // we only need srs to be embedded in the verifier index, so no need to return it
     verifier_index.srs = Arc::new(srs);
     verifier_index.endo = *Vesta::other_curve_endo();
@@ -119,8 +78,6 @@ mod test {
 
     const KIMCHI_PROOF: &[u8] = include_bytes!("../kimchi_ec_add.proof");
     const KIMCHI_VERIFIER_INDEX: &[u8] = include_bytes!("../kimchi_verifier_index.bin");
-    const KIMCHI_SRS: &[u8] = include_bytes!("../kimchi_srs.bin");
-    const KIMCHI_AGGREGATED_PUB_INPUT: &[u8] = include_bytes!("../kimchi_aggregated_pub_input.bin");
 
     #[test]
     fn kimchi_ec_add_proof_verifies() {
@@ -129,8 +86,8 @@ mod test {
         proof_buffer[..proof_size].clone_from_slice(KIMCHI_PROOF);
 
         let mut pub_input_buffer = [0u8; super::MAX_PUB_INPUT_SIZE];
-        let pub_input_size = KIMCHI_AGGREGATED_PUB_INPUT.len();
-        pub_input_buffer[..pub_input_size].clone_from_slice(KIMCHI_AGGREGATED_PUB_INPUT);
+        let pub_input_size = KIMCHI_VERIFIER_INDEX.len();
+        pub_input_buffer[..pub_input_size].clone_from_slice(KIMCHI_VERIFIER_INDEX);
 
         let result =
             verify_kimchi_proof_ffi(&proof_buffer, proof_size, &pub_input_buffer, pub_input_size);
@@ -147,8 +104,7 @@ mod test {
             rmp_serde::from_slice(KIMCHI_VERIFIER_INDEX)
                 .expect("Could not deserialize verifier index");
 
-        let mut srs: SRS<Vesta> =
-            rmp_serde::from_slice(KIMCHI_SRS).expect("Could not deserialize verifier index");
+        let mut srs = SRS::<Vesta>::create(verifier_index.max_poly_size);
 
         srs.add_lagrange_basis(verifier_index.domain);
         verifier_index.srs = Arc::new(srs.clone());
@@ -167,7 +123,7 @@ mod test {
         );
 
         // serialize and then deserialize aggregated kimchi pub inputs
-        let pub_input_bytes = serialize_kimchi_pub_input(&verifier_index, &srs);
+        let pub_input_bytes = rmp_serde::to_vec(&verifier_index).unwrap();
         let deserialized_verifier_index = deserialize_kimchi_pub_input(pub_input_bytes).unwrap();
         // verify the proof with the deserialized pub input (verifier index)
         assert!(
