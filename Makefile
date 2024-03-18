@@ -30,7 +30,6 @@ deploy-all-to-anvil-and-save-state: deploy-eigenlayer-contracts-to-anvil-and-sav
 
 start-anvil-chain-with-el-and-avs-deployed: ## starts anvil from a saved state file (with el and avs contracts deployed)
 	anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --gas-limit 9999999999999999999
-	# anvil --load-state tests/integration/avs-and-eigenlayer-deployed-anvil-state.json --disable-block-gas-limit 
 
 bindings: ## generates contract bindings
 	cd contracts && ./generate-go-bindings.sh
@@ -150,8 +149,8 @@ build-kimchi-linux:
 test-kimchi-ffi: 
 	go test ./operator/kimchi/... -v
 
+__BUILD__: ##
 build-macos: build-lambdaworks-macos build-sp1-macos build-kimchi-macos
-	# go build -ldflags="-r $(ROOT_DIR)lib" ./... 
 	go build ./...
 
 build-linux: build-lambdaworks-linux build-sp1-linux build-kimchi-linux
@@ -167,6 +166,7 @@ clean:
 	@cd operator/kimchi/lib && cargo clean 2> /dev/null
 	@go clean ./...
 
+__TASK_GENERATOR__:
 start-task-generator: ## 
 	go run task_generator/cmd/main.go --config config-files/aggregator.yaml \
 		--aligned-layer-deployment ${DEPLOYMENT_FILES_DIR}/aligned_layer_avs_deployment_output.json \
@@ -174,6 +174,8 @@ start-task-generator: ##
 		--ecdsa-private-key ${AGGREGATOR_ECDSA_PRIV_KEY} \
 		2>&1 | zap-pretty
 	
+
+__TASK_SENDERS__:
 send-cairo-proof:
 	go run task_sender/cmd/main.go --proof tests/testing_data/fibo_5.proof \
 		--verifier-id cairo \
@@ -195,5 +197,3 @@ send-kimchi-proof:
 		--pub-input tests/testing_data/kimchi/kimchi_verifier_index.bin \
 		--verifier-id kimchi \
 		2>&1 | zap-pretty
-
-	
