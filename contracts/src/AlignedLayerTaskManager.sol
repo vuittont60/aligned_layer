@@ -82,6 +82,7 @@ contract AlignedLayerTaskManager is
     // NOTE: this function creates new task, assigns it a taskId
     function createNewTask(
         bytes calldata proof,
+        bytes calldata pubInput,
         uint16 verifierId,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers
@@ -89,6 +90,7 @@ contract AlignedLayerTaskManager is
         // create a new task struct
         Task memory newTask;
         newTask.proof = proof;
+        newTask.pubInput = pubInput;
         newTask.verifierId = verifierId;
         newTask.taskCreatedBlock = uint32(block.number);
         newTask.quorumThresholdPercentage = quorumThresholdPercentage;
@@ -177,7 +179,7 @@ contract AlignedLayerTaskManager is
     // TODO(samlaf): should we check that quorumNumbers is same as the one recorded in the task?
 
     // TODO: FIX THIS, not updated for proofs
-    
+
     function raiseAndResolveChallenge(
         Task calldata task,
         TaskResponse calldata taskResponse,
@@ -185,7 +187,7 @@ contract AlignedLayerTaskManager is
         BN254.G1Point[] memory pubkeysOfNonSigningOperators
     ) external {
         uint32 referenceTaskIndex = taskResponse.referenceTaskIndex;
-        
+
         taskSuccesfullyChallenged[referenceTaskIndex] = true;
 
         emit TaskChallengedUnsuccessfully(referenceTaskIndex, msg.sender);

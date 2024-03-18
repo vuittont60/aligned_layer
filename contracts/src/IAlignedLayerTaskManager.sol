@@ -27,6 +27,7 @@ interface IAlignedLayerTaskManager {
     // STRUCTS
     struct Task {
         bytes proof;
+        bytes pubInput;
         uint16 verifierId;
         uint32 taskCreatedBlock;
         // task submitter decides on the criteria for a task to be completed
@@ -60,6 +61,7 @@ interface IAlignedLayerTaskManager {
     // NOTE: this function creates new task.
     function createNewTask(
         bytes calldata proof,
+        bytes calldata pubInput,
         uint16 verifierId,
         uint32 quorumThresholdPercentage,
         bytes calldata quorumNumbers

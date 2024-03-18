@@ -59,11 +59,12 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 	// We are randomizing bytes for bad proofs, all should fail
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	var proof []byte
+	var pubInput []byte
 	badProof := make([]byte, 32)
 	r.Read(badProof)
 	proof = badProof
 
-	_ = tg.SendNewTask(proof, common.LambdaworksCairo)
+	_ = tg.SendNewTask(proof, pubInput, common.LambdaworksCairo)
 	taskNum++
 
 	for {
@@ -77,27 +78,27 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 			// These proofs can be either Cairo, Plonk, Sp1 or a randomly generated one
 			switch r.Intn(4) {
 			case 0:
-				proof = generateCairoProof()
-				err := tg.SendNewTask(proof, common.LambdaworksCairo)
+				proof, pubInput = generateCairoProof()
+				err := tg.SendNewTask(proof, pubInput, common.LambdaworksCairo)
 				if err != nil {
 					continue
 				}
 			case 1:
-				proof = generateSp1Proof()
-				err := tg.SendNewTask(proof, common.Sp1BabyBearBlake3)
+				proof, pubInput = generateSp1Proof()
+				err := tg.SendNewTask(proof, pubInput, common.Sp1BabyBearBlake3)
 				if err != nil {
 					continue
 				}
 			case 2:
-				proof = generatePlonkProof()
-				err := tg.SendNewTask(proof, common.GnarkPlonkBls12_381)
+				proof, pubInput = generatePlonkProof()
+				err := tg.SendNewTask(proof, pubInput, common.GnarkPlonkBls12_381)
 				if err != nil {
 					continue
 				}
 			case 3:
-				proof = generateRandomProof(r)
+				proof, pubInput = generateRandomProof(r)
 				verifierId := r.Intn(3)
-				err := tg.SendNewTask(proof, common.VerifierId(verifierId))
+				err := tg.SendNewTask(proof, pubInput, common.VerifierId(verifierId))
 				if err != nil {
 					continue
 				}
@@ -109,8 +110,8 @@ func (tg *TaskGenerator) Start(ctx context.Context) error {
 }
 
 // sendNewTask sends a new task to the task manager contract
-func (tg *TaskGenerator) SendNewTask(proof []byte, verifierId common.VerifierId) error {
-	_, taskIndex, err := tg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
+func (tg *TaskGenerator) SendNewTask(proof []byte, pubInput []byte, verifierId common.VerifierId) error {
+	_, taskIndex, err := tg.avsWriter.SendNewTaskVerifyProof(context.Background(), proof, pubInput, verifierId, types.QUORUM_THRESHOLD_NUMERATOR, types.QUORUM_NUMBERS)
 	if err != nil {
 		tg.logger.Error("Task generator failed to send proof", "err", err)
 		return err
@@ -121,35 +122,46 @@ func (tg *TaskGenerator) SendNewTask(proof []byte, verifierId common.VerifierId)
 	return nil
 }
 
-func generateCairoProof() []byte {
+func generateCairoProof() ([]byte, []byte) {
 	proofBytes, err := os.ReadFile("tests/testing_data/fibo_5.proof")
 	if err != nil {
 		panic("Could not read CAIRO proof file")
 	}
 
-	return proofBytes
+	var pubInputBytes []byte
+
+	return proofBytes, pubInputBytes
 }
 
-func generatePlonkProof() []byte {
+func generatePlonkProof() ([]byte, []byte) {
 	proofBytes, err := os.ReadFile("tests/testing_data/plonk_cubic_circuit.proof")
 	if err != nil {
 		panic("Could not read PLONK proof file")
 	}
+	pubInputBytes, err := os.ReadFile("tests/testing_data/witness.pub")
+	if err != nil {
+		panic("Could not read PLONK public input file")
+	}
 
-	return proofBytes
+	return proofBytes, pubInputBytes
 }
 
-func generateSp1Proof() []byte {
+func generateSp1Proof() ([]byte, []byte) {
 	proofBytes, err := os.ReadFile("tests/testing_data/sp1_fibonacci.proof")
 	if err != nil {
 		panic("Could not read SP1 proof file")
 	}
 
-	return proofBytes
+	var pubInputBytes []byte
+
+	return proofBytes, pubInputBytes
 }
 
-func generateRandomProof(r *rand.Rand) []byte {
+func generateRandomProof(r *rand.Rand) ([]byte, []byte) {
 	badProof := make([]byte, 32)
 	r.Read(badProof)
-	return badProof
+
+	var pubInputBytes []byte
+
+	return badProof, pubInputBytes
 }

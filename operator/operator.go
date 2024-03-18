@@ -336,6 +336,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 
 	proof := newTaskCreatedLog.Task.Proof
 	verifierId := newTaskCreatedLog.Task.VerifierId
+	pubInput := newTaskCreatedLog.Task.PubInput
 	proofLen := (uint)(len(proof))
 
 	o.logger.Info("Received new task with proof to verify",
@@ -361,7 +362,7 @@ func (o *Operator) ProcessNewTaskCreatedLog(newTaskCreatedLog *cstaskmanager.Con
 		}
 		return taskResponse
 	} else if verifierId == uint16(common.GnarkPlonkBls12_381) {
-		VerificationResult := o.VerifyPlonkProof(proof)
+		VerificationResult := o.VerifyPlonkProof(proof, pubInput)
 
 		o.logger.Infof("PLONK proof verification result: %t", VerificationResult)
 		taskResponse := &cstaskmanager.IAlignedLayerTaskManagerTaskResponse{
@@ -401,12 +402,11 @@ func (o *Operator) SignTaskResponse(taskResponse *cstaskmanager.IAlignedLayerTas
 
 // Load the PLONK proof and verification key disk and verify it using
 // the Gnark PLONK verifier
-func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
+func (o *Operator) VerifyPlonkProof(proofBytes []byte, pubInputBytes []byte) bool {
 	vkFile, err := os.Open("tests/testing_data/plonk_verification_key")
 	if err != nil {
 		panic("Could not open verification key file")
 	}
-
 	defer vkFile.Close()
 
 	proofReader := bytes.NewReader(proofBytes)
@@ -418,13 +418,14 @@ func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
 		return false
 	}
 
-	publicWitness, err := witness.New(ecc.BLS12_381.ScalarField())
+	pubInputReader := bytes.NewReader(pubInputBytes)
+	pubInput, err := witness.New(ecc.BLS12_381.ScalarField())
 	if err != nil {
 		panic("Error instantiating witness")
 	}
-
+	_, err = pubInput.ReadFrom(pubInputReader)
 	if err != nil {
-		panic("Could not read witness from file")
+		panic("Could not read PLONK public input")
 	}
 
 	vk := plonk.NewVerifyingKey(ecc.BLS12_381)
@@ -433,7 +434,7 @@ func (o *Operator) VerifyPlonkProof(proofBytes []byte) bool {
 		panic("Could not read verifying key from file")
 	}
 
-	err = plonk.Verify(proof, vk, publicWitness)
+	err = plonk.Verify(proof, vk, pubInput)
 	if err != nil {
 		return false
 	} else {
