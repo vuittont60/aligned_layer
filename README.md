@@ -3,11 +3,11 @@
 > [!CAUTION]
 > To be used in testnet only.
 
-Basic repo demoing a Stark/Snark verifier AVS middleware with full eigenlayer integration. 
+Basic repo demoing a Stark/Snark verifier AVS middleware with full EigenLayer integration. 
 
 ## The Project 
 
-Aligned Layer works with Eigen Layer to leverage ethereum consensus mechanism for ZK proof verification. Working outside the EVM, this allows for cheap verification of any proving system. This enables the usage of cutting edge algorithms, that may use new techniques to prove even faster. Even more, proving systems that reduces the proving overhead and adds verifier overhead, now become economically feasable to verify thanks to Aligned Layer. 
+Aligned Layer works with EigenLayer to leverage ethereum consensus mechanism for ZK proof verification. Working outside the EVM, this allows for cheap verification of any proving system. This enables the usage of cutting edge algorithms, that may use new techniques to prove even faster. Even more, proving systems that reduces the proving overhead and adds verifier overhead, now become economically feasable to verify thanks to Aligned Layer. 
 
 Full documentation and examples will be added soon
 
@@ -28,7 +28,7 @@ Start anvil in a separate terminal:
 make start-anvil-chain-with-el-and-avs-deployed
 ```
 
-The above command starts a local anvil chain from a [saved state](./tests/integration/eigenlayer-and-shared-avs-contracts-deployed-anvil-state.json) with eigenlayer and Aligned Layer contracts already deployed (but no operator registered).
+The above command starts a local anvil chain from a [saved state](./tests/integration/eigenlayer-and-shared-avs-contracts-deployed-anvil-state.json) with EigenLayer and Aligned Layer contracts already deployed (but no operator registered).
 
 Start the aggregator:
 
@@ -36,7 +36,7 @@ Start the aggregator:
 make start-aggregator
 ```
 
-Register the operator with eigenlayer and aligned layer, then start the process. In MacOs, run:
+Register the operator with EigenLayer and Aligned Layer, then start the process. In MacOs, run:
 
 ```bash
 make cli-setup-operator-macos
@@ -92,7 +92,7 @@ make bindings
 
 ## FAQ
 
-**What is the objective of Aligned layer?**
+**What is the objective of Aligned Layer?**
 
 Aligned Layer’s mission is to extend Ethereum’s zero-knowledge capabilities. We are certain the zero-knowledge proofs will have a key role in the future of blockchains and computation. We don’t know what that future will look like, but we are certain it will be in Ethereum. The question we want to share is: If we are certain zero-knowledge proofs are the future of Ethereum but we are not certain which of the many possible zero-knowledge futures will win. How can we build an infrastructure for Ethereum to be compatible with any future zero-knowledge proving system?
 
@@ -132,7 +132,7 @@ Maybe we want faster proving and don't care about proof size. Maybe we want the 
 
 Aligned Layer solves all of this. No matter how or what you want to prove, it can be verified efficiently here while still inheriting the security of Ethereum as other L2s.
 
-**Why Eigen Layer?**
+**Why EigenLayer?**
 
 We believe Ethereum is the best settlement layer, and zero-knowledge will play a key role in helping it be THE settlement layer of the internet. We want to build a verification layer that helps Ethereum achieve this goal. This layer needs to have a decentralized group of validators that will just re-execute the verification of different proofs, but how can we build such a decentralized network that will help Ethereum? Creating a new L1 doesn’t benefit Ethereum because using it will add new trust assumptions to the Ethereum protocols relying on it. So, if we must have:
 
