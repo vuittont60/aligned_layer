@@ -7,7 +7,7 @@ The issue we face is that Ethereum was not originally designed for validity proo
 We want to become a key player in this space, supporting anyone involved in ZK technology development or research. With an incredible team and advisory group, we're determined to bring this vision to life.
 
 - [Features](about_aligned/features.md)
-- [Usecases](about_aligned/usecases.md)
+- [Use cases](about_aligned/use_cases.md)
 - [Modular approach](about_aligned/modular_approach.md)
 - [Role of EigenLayer](about_aligned/role_of_eigenlayer.md)
 - [How does Aligned Layer work?](about_aligned/how_does_aligned_layer_work.md)

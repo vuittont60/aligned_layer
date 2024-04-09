@@ -1,6 +1,6 @@
-# Usecases:
+# Use cases:
 
-Among the possible usecases of Aligned Layer we have:
+Among the possible use cases of Aligned Layer we have:
 
 - Soft finality for Rollups and Appchains.
   
