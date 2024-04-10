@@ -11,6 +11,12 @@
 * [How does Aligned Layer work?](about_aligned/how_does_aligned_layer_work.md)
 * [Learning Resources](about_aligned/learning_resources.md)
 
+## Contracts
+
+* [AlignedLayerServiceManager](contracts/service_manager.md)
+* [AlignedLayerTaskManager](contracts/task_manager.md)
+* [ERC20](contracts/ERC20.md)
+
 ## Links
 
 * [Telegram Group](https://t.me/aligned_layer)
